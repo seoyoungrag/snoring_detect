@@ -432,7 +432,7 @@ public class EventFireGui extends JFrame {
 			            		//&& amplitude < sefamplitude
 			            		) {
 			            	count++;
-			            	System.out.println(hz +" "+db+" "+amp+" "+sehz+" "+seamp);
+			            	//System.out.println(hz +" "+db+" "+amp+" "+sehz+" "+seamp);
 			            }
 				        targetStream.close();
 					}

@@ -16,6 +16,12 @@ public class EventFireStarter {
 			e.printStackTrace();
 		}*/
 		List<String> fileList = new ArrayList<String>();
+		fileList.add("raw/392327__alienxxx__musical-table.wav");
+		fileList.add("raw/264186__deleted-user-4966198__music-box-swan-lake.wav");
+		fileList.add("raw/139057__haydensayshi123__green-sleves-music-box.wav");
+		fileList.add("raw/273192__rigden33__music208.wav");
+		fileList.add("raw/244533__xtrgamr__music-game-disc-eject.wav");
+		fileList.add("raw/367603__davidsraba__sounds-like-music.wav");
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
 		fileList.add("raw/401334__ckvoiceover__man-coughing.wav");
 		fileList.add("raw/178997__bigtexan7213__coughing.wav");
