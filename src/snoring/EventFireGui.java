@@ -1,7 +1,6 @@
 package snoring;
 
 import java.awt.Container;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,13 +9,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
-import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -402,12 +400,14 @@ public class EventFireGui extends JFrame {
 	            File outputfile = new File("saved.png");
 	            ImageIO.write(theImage, "png", outputfile);
 */
+	            /*
 	            audioCalculator = new AudioCalculator();
 				frameBytes = new byte[snoringApi.frameByteSize];
 			    try {
 		            int count = 0;
 					targetStream = new ByteArrayInputStream(audioData);
 					initBuffer();
+					int i = 1;
 					while( ( read = targetStream.read( frameBytes ) ) > 0 ){
 						if(frameBytes == null) {
 							frameBytes = new byte[snoringApi.frameByteSize];
@@ -421,32 +421,210 @@ public class EventFireGui extends JFrame {
 			            int sefamplitude = audioCalculator.getAmplitudeNth(audioCalculator.getFreqSecondN());
 			            //double frequency2Th = audioCalculator.getFrequency2Th();
 
-			            final String amp = String.valueOf(amplitude + " Amp");
-			            final String db = String.valueOf(decibel + " db");
-			            final String hz = String.valueOf(frequency + " Hz");
-			            final String sehz = String.valueOf(sefrequency + " Hz");
-			            final String seamp = String.valueOf(sefamplitude + "Amp");
+			            final String amp = String.valueOf(amplitude + "Amp");
+			            final String db = String.valueOf(decibel + "db");
+			            final String hz = String.valueOf(frequency + "Hz");
+			            final String sehz = String.valueOf(sefrequency + "Hz(2th)");
+			            final String seamp = String.valueOf(sefamplitude + "Amp(2th)");
 			            //System.out.println(amp);
 			            //System.out.println(db);
+			            double times = (((double)(frameBytes.length/(44100d*16*1)))*8)*i;
+			            if(frequency>1000) {
+		            	System.out.println(String.format("%.2f", times)+"s "
+		            			+ hz +" "+db+" "+amp+" "
+		            			//+sehz+" "+seamp
+		            			);
+			            }
 			            if(frequency>=150 && frequency<=250 && sefrequency>=950 &&sefrequency<1050 
 			            		//&& amplitude < sefamplitude
 			            		) {
 			            	count++;
 			            	//System.out.println(hz +" "+db+" "+amp+" "+sehz+" "+seamp);
 			            }
-				        targetStream.close();
+				        targetStream.close();i++;
 					}
 					System.out.println("audio length(s): "+((double)(audioData.length/(44100d*16*1)))*8); 
 					System.out.println("(frequency>=150 && frequency<=250 && sefrequency>=950 &&sefrequency<1050) CNT: "+count);
 					System.out.println("AlarmStaticVariables.snoringCount: "+AlarmStaticVariables.snoringCount);
+					
 			    } catch (IOException e) {
 					e.printStackTrace();
 				}
 	        } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
-	        }
-			
+	        }*/
+	            //이갈이, 이갈이는 높은 주파수가 굉장히 짧은 간격으로 여러번 나타난다.
+	            //1. 특정 주파수보다 높은 주파수가 --> 특정주파수 a=? 
+	            //2. 특정 시간동안 특정 횟수보다 많이 반복되는지 --> 특정시간 b=?, 특정횟수 c=?
+	            //3. 체크되면 이갈이다.
+            audioCalculator = new AudioCalculator();
+			frameBytes = new byte[snoringApi.frameByteSize];
+		    try {
+				targetStream = new ByteArrayInputStream(audioData);
+				int i = 1;
+				int sumCnt = 0;
+				int maxAmp = 0;
+	            double curTermHz = 0.0;
+	            double curTermSecondHz = 0.0;
+	            double curTermTime = 0.0;
+	            int findedTimeCnt = 0;
+	            int unchcekdFindedTimeCnt = 0;
+	            List<GrinderClass> gcl = new ArrayList<GrinderClass>();
+				//List<String> findedTimeAr = new ArrayList<String>();
+				//List<Integer> findedTimeCntAr = new ArrayList<Integer>();
+				//List<Double> findedHzAr = new ArrayList<Double>();
+				while( ( read = targetStream.read( frameBytes ) ) > 0 ){
+					if(frameBytes == null) {
+						frameBytes = new byte[snoringApi.frameByteSize];
+					}
+
+		            audioCalculator.setBytes(frameBytes);
+		            int amplitude = audioCalculator.getAmplitude();
+		            double decibel = audioCalculator.getDecibel();
+		            double frequency = audioCalculator.getFrequency();
+		            double sefrequency = audioCalculator.getFrequencySecondMax();
+		            int sefamplitude = audioCalculator.getAmplitudeNth(audioCalculator.getFreqSecondN());
+
+		            final String amp = String.valueOf(amplitude + "Amp");
+		            final String db = String.valueOf(decibel + "db");
+		            final String hz = String.valueOf(frequency + "Hz");
+		            final String sehz = String.valueOf(sefrequency + "Hz(2th)");
+		            final String seamp = String.valueOf(sefamplitude + "Amp(2th)");
+		            double times = (((double)(frameBytes.length/(44100d*16*1)))*8)*i;
+		            int findFzTerm = 100;
+		            //가장 첫 포먼트는 요상한 값이라 첫번째 진폭값은 무시한다. 
+		            //녹음할떄는 아래 로직 무시해도 됨.
+		            if(sumCnt ==0) {
+		            	sumCnt++;
+		            	continue;
+		            }
+		            else if(maxAmp != 0.0 && maxAmp/sumCnt *2 < amplitude) {
+		            	maxAmp+=amplitude;
+		            }
+		            //특정 주파수대역에서 연속적으로 발생해야 한다.
+		            //분석하는 소리의 길이는 0.01초.
+		            //아래는 0.01초 데이터를 0.1초 단위로 분석
+		            
+		            //소리가 평균 크기보다 클 때 분석한다.
+		            //-> 이갈이는 소리 폭이 너무 커서 평균 측정 소리 때문에 측정이 안될 수 도 있다.
+		            if(amplitude > (maxAmp/sumCnt)) {
+		            //if(amplitude > 1000) {
+		            	//계속 발생되는 주파수의 0.1초간격으로 비교하여 비슷한 주파수 일때(+-50)가 연속되는 경우에 카운팅 한다.
+		            	
+		            	//아직 기준 시간이 없으면 초기화
+		            	if(curTermTime == 0.0) {
+		            		curTermTime = times;
+		            		curTermHz = frequency;
+		            		curTermSecondHz = sefrequency;
+		            	}
+		            	
+		            	//기준 분석 시간으로부터 0.1초 간격인가
+		            	//if( times-curTermTime<0.1 ) {
+		            	if( times-curTermTime<0.1 ) { //1초로 변경하고 3번이상 유지되었는지를 계산
+		            		//비슷한 주파수 인가(+- 50)
+			            	if( 
+			            			//frequency >15 && frequency <400 &&
+			            			frequency > curTermHz-findFzTerm && frequency < curTermHz +findFzTerm 
+			            			&&
+			            			sefrequency > curTermSecondHz-findFzTerm && sefrequency < curTermSecondHz +findFzTerm
+			            			&& frequency != sefrequency && frequency!=0.0 && sefrequency!=0
+			            			) {
+			            		findedTimeCnt++;
+			            		
+			            	}	
+			            	else if(decibel<=-30) {
+		            			//System.out.println(amplitude);
+			            		unchcekdFindedTimeCnt++;	
+			            	}
+			            	else {
+			            		//비슷한 주파수가 아니면 무시
+			            	}
+		            	}
+		            	//기준시간보다 0.1초가 지나있다면 초기화
+		            	else {
+		            		//0.1초동안 비슷한 주파수 대역이 1번 이상 발생한 데이터 축적
+		            		//System.out.println("findedTimeCnt vs unchcekdFindedTimeCnt: "+findedTimeCnt+" vs" +unchcekdFindedTimeCnt);
+		            		if(findedTimeCnt<=2&& unchcekdFindedTimeCnt>findedTimeCnt) {
+		            			gcl.add(new GrinderClass(String.format("%.2f", curTermTime),findedTimeCnt ,curTermHz, curTermSecondHz)); 
+		            			/*
+		            			findedHzAr.add(curTermHz);
+			            		findedTimeAr.add(String.format("%.2f", curTermTime));
+			            		findedTimeCntAr.add(findedTimeCnt);
+			            		*/
+		            		}
+		            		curTermTime = 0.0;
+		            		curTermHz = 0.0;
+		            		curTermSecondHz = 0.0;
+		            		findedTimeCnt = 0;
+		            		unchcekdFindedTimeCnt = 0;
+		            		
+		            	}
+		            }
+			        targetStream.close();
+			        i++;
+			        sumCnt++;
+				}
+				System.out.println("audio length(s): "+((double)(audioData.length/(44100d*16*1)))*8); 
+				System.out.println("grindArr: "+Arrays.toString(gcl.toArray()));
+				//int sumfindedTimeCnt = 0;
+				for(GrinderClass gc : gcl) {
+					//sumfindedTimeCnt+=gc.getFindedTimeCnt();
+						//System.out.println("all :"+gc.toString());
+				}
+				System.out.println("grindCnt: "+gcl.size());
+				//System.out.println("sumfindedTimeCnt: "+sumfindedTimeCnt/gcl.size());
+				double lowerMinHz = 0.0;
+				double lowerMaxHz = 0.0;
+				double higherMinHz = 0.0;
+				double higherMaxHz = 0.0;
+				for(GrinderClass gc : gcl) {
+					if(gc.getFindedHz()<1000 && gc.getFindedTimeCnt()>1) {
+						if(lowerMinHz == 0.0) {
+							lowerMinHz = gc.getFindedHz();	
+						}
+						if(lowerMaxHz == 0.0) {
+							lowerMaxHz = gc.getFindedHz();	
+						}
+						if(gc.getFindedHz()>lowerMaxHz) {
+							lowerMaxHz = gc.getFindedHz();
+						}
+						if(gc.getFindedHz()<=lowerMinHz) {
+							lowerMinHz = gc.getFindedHz();
+						}
+						System.out.println("lower :"+gc.toString());
+					}
+				}
+				for(GrinderClass gc : gcl) {
+					if(gc.getFindedHz()>=1000 && gc.getFindedTimeCnt()>1) {
+						if(higherMinHz == 0.0) {
+							higherMinHz = gc.getFindedHz();	
+						}
+						if(higherMaxHz == 0.0) {
+							higherMaxHz = gc.getFindedHz();	
+						}	
+						if(gc.getFindedHz()>higherMaxHz) {
+							higherMaxHz = gc.getFindedHz();
+						}
+						if(gc.getFindedHz()<=higherMinHz) {
+							higherMinHz = gc.getFindedHz();
+						}
+						System.out.println("higher :"+gc.toString());
+					}
+				}
+				/*System.out.println("findedTimeAr: "+Arrays.toString(findedTimeAr.toArray()));
+				System.out.println("findedTimeCntAr: "+Arrays.toString(findedTimeCntAr.toArray()));
+				System.out.println("findedHzAr: "+Arrays.toString(findedHzAr.toArray()));
+				*/
+				System.out.println("lower range :"+lowerMinHz+"~"+lowerMaxHz);
+				System.out.println("higher range :"+higherMinHz+"~"+higherMaxHz);
+		    } catch (IOException e) {
+				e.printStackTrace();
+			}
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

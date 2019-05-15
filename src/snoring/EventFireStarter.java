@@ -16,12 +16,14 @@ public class EventFireStarter {
 			e.printStackTrace();
 		}*/
 		List<String> fileList = new ArrayList<String>();
+		/*
 		fileList.add("raw/392327__alienxxx__musical-table.wav");
 		fileList.add("raw/264186__deleted-user-4966198__music-box-swan-lake.wav");
 		fileList.add("raw/139057__haydensayshi123__green-sleves-music-box.wav");
 		fileList.add("raw/273192__rigden33__music208.wav");
 		fileList.add("raw/244533__xtrgamr__music-game-disc-eject.wav");
 		fileList.add("raw/367603__davidsraba__sounds-like-music.wav");
+		*/
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
 		fileList.add("raw/401334__ckvoiceover__man-coughing.wav");
 		fileList.add("raw/178997__bigtexan7213__coughing.wav");
@@ -65,6 +67,15 @@ public class EventFireStarter {
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
 		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/377119__ejking17__20170112-the-zzz.wav");
+		//fileList = new ArrayList<String>();
+		fileList.add("raw/Matt Script - TEETH GRINDING_GRIND_TOOTH_CREAK.wav");
+		
+		fileList.add("raw/365690__mr-alden__teeth-gnashing-and-grinding.wav");
+		fileList.add("raw/Matt Script - TEETH CHATTERING_CHATTER_TOOTH.wav");
+		fileList.add("raw/Matt Script - SINGLE BITE WITH TEETH_HUMAN_BITING.wav");
+		fileList.add("raw/Matt Script - TEETH CHATTERING_FAST_MOVEMENT_MOUTH OPEN.wav");
+		fileList.add("raw/veryclearrepeating.wav");
+		
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}
