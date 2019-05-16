@@ -65,15 +65,13 @@ public class EventFireStarter {
 		fileList.add("raw/69329__robinhood76__00966-baby-snoring-2.wav");
 		fileList.add("raw/61605__andune__schnauf.wav");
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
-		fileList.add("raw/20545__sirplus__snore.wav");
+		//fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/377119__ejking17__20170112-the-zzz.wav");
 		//fileList = new ArrayList<String>();
 		fileList.add("raw/Matt Script - TEETH GRINDING_GRIND_TOOTH_CREAK.wav");
-		
-		fileList.add("raw/365690__mr-alden__teeth-gnashing-and-grinding.wav");
 		fileList.add("raw/Matt Script - TEETH CHATTERING_CHATTER_TOOTH.wav");
-		fileList.add("raw/Matt Script - SINGLE BITE WITH TEETH_HUMAN_BITING.wav");
 		fileList.add("raw/Matt Script - TEETH CHATTERING_FAST_MOVEMENT_MOUTH OPEN.wav");
+		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/veryclearrepeating.wav");
 		
 		for(String filePath : fileList) {
