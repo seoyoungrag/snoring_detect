@@ -461,7 +461,7 @@ public class EventFireGui extends JFrame {
 	            //이 때, 진폭의 수치는 의미가 없을 수 있으므로 먼저 반복횟수로만 잡아본다.
 	            //1. 특정 주파수보다 높은 주파수가 --> 특정주파수 a=? 
 	            //2. 특정 시간동안 특정 횟수보다 많이 반복되는지 --> 특정시간 b=?, 특정횟수 c=?
-	            //3. 체크되면 이갈이다.
+	            /*//3. 체크되면 이갈이다.
             audioCalculator = new AudioCalculator();
 			frameBytes = new byte[snoringApi.frameByteSize];
 		    try {
@@ -527,7 +527,7 @@ public class EventFireGui extends JFrame {
 		            	//연속으로 높게 발생되는 진폭이 0.01초 단위로 2~7회 연속되는지 체크  
 		            	
 		            	//아직 기준 시간이 없으면 초기화
-		            /*
+		            
 		            	if(curTermTime == 0.0) {
 		            		curTermTime = times;
 		            		curTermDb = decibel;
@@ -535,7 +535,7 @@ public class EventFireGui extends JFrame {
 		            		curTermHz = frequency;
 		            		curTermSecondHz = sefrequency;
 		            	}
-		            */
+		            
 						if (decibel > chkDb  // 기준 데시벨 보다 커야 한다. 지금 이 수치는 -5.1이지만 다른 사운드를 테스트해보고 상대적인 수치로 바꿔야한다.
 						) {
 				            //System.out.println(times+" - "+termTime+" = "+String.valueOf(times-termTime));
@@ -547,14 +547,14 @@ public class EventFireGui extends JFrame {
 									
 									||Math.floor(curTermSecondHz / 10) * 10 == Math.floor(sefrequency / 10) * 10
 									||Math.floor(curTermSecondHz / 100) * 100 == Math.floor(sefrequency / 100) * 100
-									/*
+									
 									||Math.floor(curTermHz / 10) * 10 == Math.floor(frequency / 10) * 10
 									||Math.floor(curTermHz / 100) * 100 == Math.floor(frequency / 100) * 100
-									*/
+									
 									||Math.floor(curTermAmp / 10) * 10 == Math.floor(amplitude / 10) * 10
 									||Math.floor(curTermAmp / 100) * 100 == Math.floor(amplitude / 100) * 100 
 									) { 
-								continueAmp++;/*
+								continueAmp++;
 								System.out.println(String.format("%.2f", times) + "s " 
 								+ Math.abs(curTermDb) + ":" 
 								+ Math.abs(decibel)+ ":" 
@@ -567,21 +567,21 @@ public class EventFireGui extends JFrame {
 								+ Math.floor(curTermAmp / 10) * 10+":"
 								+ Math.floor(amplitude / 10) * 10+", "
 								+ Math.floor(curTermAmp / 100) * 100+":"
-								+Math.floor(amplitude / 100) * 100 +"  "+continueAmp );*/
+								+Math.floor(amplitude / 100) * 100 +"  "+continueAmp );
 								curTermTime = times;
 								curTermDb = decibel;
 								curTermAmp = amplitude;
 								curTermHz = frequency;
 								curTermSecondHz = sefrequency;
 								//System.out.println(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp+","+continueAmp);
-								/*
+								
 								System.out.println(Math.abs(curTermDb));
 								System.out.println(Math.abs(decibel));
 								System.out.println(Math.abs(Math.abs(curTermDb) - Math.abs(decibel)));
 								System.out.println(Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 5);
-								*/
+								
 								// 주파수 대역이 100의 자리에서 내림했을 때 동일한가?
-								/*
+								
 								if (Math.floor(curTermSecondHz / 10) * 10 == Math.floor(sefrequency / 10) * 10||
 										Math.floor(curTermSecondHz / 100) * 100 == Math.floor(sefrequency / 100) * 100) {
 									
@@ -603,16 +603,16 @@ public class EventFireGui extends JFrame {
 										continueAmp = 0;
 									}
 								}
-								*/
+								
 							} else {
-/*
+
 								System.out.println("==========STARTING AMP CHECK STA==============");
 								System.out.println(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp);
 								System.out.println( curTermDb + " " + decibel);
 								System.out.println( Math.floor(curTermSecondHz / 10) * 10 + " " + Math.floor(sefrequency / 10) * 10);
 								System.out.println( Math.floor(curTermSecondHz / 100) * 100 + " " + Math.floor(sefrequency / 100) * 100);
 								System.out.println("==========STARTING AMP CHECK END==============");
-								*/
+								
 								 //if(continueAmp<=7 && continueAmp>=2) { 
 								if (continueAmp == 1 || continueAmp == 2) { // 진폭, 주파수, 데시벨 각각 or 조건으로 1번 반복하는 것만 체크하자. 주파수가 동일한데 1번 연속되어야 하며 2번이상은 안된다.
 									gcl.add(new GrinderClass(String.format("%.2f", curTermTime), continueAmp, curTermHz, curTermSecondHz, curTermDb, curTermAmp));
@@ -644,7 +644,7 @@ public class EventFireGui extends JFrame {
 							curTermSecondHz = sefrequency;
 						}
 		            	//기준 분석 시간으로부터 0.1초 간격인가X
-		            	/*
+		            	
 		            	if( times-curTermTime<0.1 ) { //1초로 변경하고 3번이상 유지되었는지를 계산X
 		            		//비슷한 주파수 인가(+- 50)
 			            	if( 
@@ -684,7 +684,7 @@ public class EventFireGui extends JFrame {
 		            		unchcekdFindedTimeCnt = 0;
 		            		
 		            	}
-		            */
+		            
 		            //}
 			        targetStream.close();
 			        i++;
@@ -709,11 +709,11 @@ public class EventFireGui extends JFrame {
 					sumPerTime = timesValue.get((int)Math.floor(Double.parseDouble(gc.getFindedTime())));
 					timesValue.put((int) Math.floor(Double.parseDouble(gc.getFindedTime())), sumPerTime+1);
 				}
-				/*for (Object obj : timesValue.entrySet()) {
+				for (Object obj : timesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
 				    System.out.print("~초: " + entry.getKey());
 				    System.out.println(", 횟수: " + entry.getValue());
-				}*/
+				}
 				HashMap<Integer, Integer> oppTimesValue = new HashMap<Integer,Integer>();
 				for(int j = 0 ; j <= audioLth ; j ++) {
 					oppTimesValue.put(j, 0);
@@ -722,13 +722,13 @@ public class EventFireGui extends JFrame {
 					sumPerTime = oppTimesValue.get((int)Math.floor(Double.parseDouble(gc.getFindedTime())));
 					oppTimesValue.put((int) Math.floor(Double.parseDouble(gc.getFindedTime())), sumPerTime+1);
 				}
-/*
+
 				for (Object obj : oppTimesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
 				    System.out.print("~초: " + entry.getKey());
 				    System.out.println(", 횟수: " + entry.getValue());
 				}
-				*/
+				
 
 				//1. 진폭, 데시벨, 주파수를 이용해서 0.01초 단위로 1번만 발생하거나 2번 연속발생한 포먼트를 측정하고,
 				//2. 위 포먼트가 1초동안 얼만큼 발생했는지를 카운트를 체크, 기준치는 3으로 잡았다.
@@ -740,7 +740,7 @@ public class EventFireGui extends JFrame {
 				System.out.println("진폭, 데시벨, 주파수를 이용해서 0.01초 단위로 1번만 발생하거나 2번 연속발생한 포먼트는 ");
 				for (Object obj : timesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
-				    /*System.out.println(entry.getValue()+","+oppTimesValue.get(entry.getKey()));*/
+				    System.out.println(entry.getValue()+","+oppTimesValue.get(entry.getKey()));
 				    if(entry.getValue()>=2 && oppTimesValue.get(entry.getKey()) >= 60) {
 				    	continueCnt++;
 				    }else {
@@ -792,12 +792,182 @@ public class EventFireGui extends JFrame {
 						//System.out.println("higher :"+gc.toString());
 					}
 				}
-				/*System.out.println("findedTimeAr: "+Arrays.toString(findedTimeAr.toArray()));
+				System.out.println("findedTimeAr: "+Arrays.toString(findedTimeAr.toArray()));
 				System.out.println("findedTimeCntAr: "+Arrays.toString(findedTimeCntAr.toArray()));
 				System.out.println("findedHzAr: "+Arrays.toString(findedHzAr.toArray()));
-				*/
+				
 				System.out.println("lower range :"+lowerMinHz+"~"+lowerMaxHz);
-				System.out.println("higher range :"+higherMinHz+"~"+higherMaxHz);
+				System.out.println("higher range :"+higherMinHz+"~"+higherMaxHz);*/
+
+	            /*무호흡증은 항상 코골이를 동반하며, 코골이의 시작하고 종료한 시간은 5~10초이내 숨을 쉬어야 하기 때문에 호흡이 가파른 느낌이 있다, 무호흡 코골이 시간이 종료한 후 숨을 멈추는 시간이 30~50초 이내이다.
+	             * 1.db세기로 무호흡코골이 및 호흡으로 측정되는 부분을 특정한다. 
+	             * 2. 호흡은 0.7초 간격은 0.2초
+	             * 3. 2번이 유지되면 무호흡코골이 혹은 호흡하는 구간이다.
+	             * 4. 3번을 유지하지 않는경우 일정 db이하로 30~50초 동안 유지되는지를 체크함으로써 무호흡 구간인지 특정한다. 
+	             * */ 
+				audioCalculator = new AudioCalculator();
+				frameBytes = new byte[snoringApi.frameByteSize];
+				try {
+					targetStream = new ByteArrayInputStream(audioData);
+					int i = 1;
+					int sumCnt = 0;
+					int maxAmp = 0;
+					double curTermHz = 0.0;
+					double curTermSecondHz = 0.0;
+					double curTermTime = 0.0;
+					double curTermDb = 0.0;
+					int curTermAmp = 0;
+					double chkDb = -9;
+					boolean isBreathTerm = false;
+					boolean isOSATerm = false;
+					int isBreathTermCnt = 0;
+					int isBreathTermCntOpp = 0;
+					int isOSATermCnt = 0;
+					int isOSATermCntOpp = 0;
+					String beforeTermWord="";
+					String BREATH = "breath";
+					String OSA = "osa";
+					while ((read = targetStream.read(frameBytes)) > 0) {
+						if (frameBytes == null) {
+							frameBytes = new byte[snoringApi.frameByteSize];
+						}
+						audioCalculator.setBytes(frameBytes);
+						int amplitude = audioCalculator.getAmplitude();
+						double decibel = audioCalculator.getDecibel();
+						double frequency = audioCalculator.getFrequency();
+						double sefrequency = audioCalculator.getFrequencySecondMax();
+						int sefamplitude = audioCalculator.getAmplitudeNth(audioCalculator.getFreqSecondN());
+
+						final String amp = String.valueOf(amplitude + "Amp");
+						final String db = String.valueOf(decibel + "db");
+						final String hz = String.valueOf(frequency + "Hz");
+						final String sehz = String.valueOf(sefrequency + "Hz(2th)");
+						final String seamp = String.valueOf(sefamplitude + "Amp(2th)");
+						double times = (((double) (frameBytes.length / (44100d * 16 * 1))) * 8) * i;
+						/*
+						System.out.print(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp);
+						System.out.print(" isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+" ");
+						System.out.println(" isBreathTermCnt: " + isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+" ");
+						*/
+						// 가장 첫 포먼트는 소리 녹음시 잘못 입력되는 값이라 첫번째 진폭값은 무시한다.
+						if (sumCnt == 0) {
+							sumCnt++;
+							continue;
+						}
+
+						// 2. 기준 데시벨보다 높은 소리라면 호흡(혹은 코골이) 구간인지 체크한다.
+						if (decibel > chkDb) {
+							// 2-1. 데시벨을 이용해서 연속된 소리인지 체크한다.
+							// 2-1-1. 연속된 소리인지 체크하기 위해서는 비슷한 데시벨인지만 체크한다.
+							//        (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음.)
+							// 2-1-2. 비슷한 데시벨은 기준 정보의 데시벨에서 +-1db로 하며, 체크될 경우 숨쉬는 구간 카운트를 1씩 증가한다. 
+							//        체크가 안되면  숨쉬기 아님 카운트를 1씩 증가한다. 숨쉬기구간은 true 된다.
+							/*
+							if (Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 1 // 데시벨 오차 범위가 1db인지만 체크
+							) {
+								isBreathTermCnt++;
+								isBreathTerm = true;
+								// 2-1-2-1. 숨쉬기 구간이 true가 될 때, 무호흡 구간이 true인 경우, 무호흡 구간을 false로 바꾸며, 
+								//          이때 기준 정보의 시간은 무호흡 시작시간, 종료시간은 무호흡 종료시간이 된다.
+								//          무호흡 구간 카운트 로깅을 하고 무호흡 구간 카운트를 초기화 한다.
+								if(isOSATerm == true) {
+									System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+									curTermTime = times;
+									isOSATerm = false;
+									isOSATermCnt = 0;
+								}
+							} else {
+								isBreathTermCntOpp++;
+							}
+							*/
+							if(isOSATerm == true) {
+								//무호흡에서 호흡으로 넘어오는 경우 오차범위가 3초는 넘어야 무호흡구간으로 본다.
+								if(beforeTermWord.equals(BREATH) && isOSATermCnt>500 ) {
+									/*
+									if(beforeTermWord.equals(OSA)) {
+										System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+									}else {
+										System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+										curTermTime = times;
+									}
+									*/
+									System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+									curTermTime = times;
+									isOSATerm = false;
+									isOSATermCnt = 0;
+									isOSATermCntOpp = 0;
+									//beforeTermWord=OSA;
+								}else {
+									//System.out.println("[ignore term, "+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+									//curTermTime = time;
+									isOSATerm = false;
+									isOSATermCnt = 0;
+									isOSATermCntOpp = 0;
+									//beforeTermWord=OSA;
+								}
+							}else {
+								isBreathTermCnt++;
+								isBreathTerm = true;
+							}
+							// 2-1-3. 숨쉬기 아님 카운트가 20을 넘으면(0.2초가 초과되면), 숨쉬는 구간 카운트가 70(0.7초) 미만일 시, 
+							//        숨쉬는 구간 카운트, 숨쉬기 아님 카운트를 0으로 초기화 한다. 숨쉬기구간은 false가 된다.
+						}else {
+							// 3. 기준 데시벨보다 낮은 소리인 경우는 무호흡 중인지 체크한다.
+							// 3-1. 숨쉬기 구간이 false인 경우, 무호흡 구간 카운트를 증가하며, 무호흡 구간은 true가 된다.
+							if(isBreathTerm == false) {
+								isOSATermCnt++;
+								isOSATerm = true;
+							}else {
+							//3-1-2. 숨쉬기 구간이 true인 경우에는 숨쉬기 아님 카운트를 증가시킨다.
+								isBreathTermCntOpp++;
+								isOSATermCntOpp++; 
+							}
+						}
+
+						if(isBreathTermCntOpp>20) {
+							if(isBreathTermCnt<70) {
+								//일정 데시벨 이상이고, 숨쉬기 카운트의 0.2초 오차가 발생한 데이터로 무시함.
+								//System.out.println("[ignore term, "+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " + isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
+								//curTermTime = time;
+								isBreathTermCnt = 0;
+								isBreathTermCntOpp = 0;
+								isBreathTerm = false;
+								//beforeTermWord=BREATH;
+							}else {
+								// 2-1-3-1. 기준 정보의 기준 시간이 숨쉬기 시작시간, 현재 시간은 숨쉬기 종료 시간
+								//        (이 시간은 한번 호흡이지 무호흡 사이의 구간을 의미하지는 않는다.)
+								/*
+								if(beforeTermWord.equals(BREATH)) {
+									System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " + isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
+								}else {
+									System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " + isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
+									curTermTime = times;
+								}
+								*/
+								//System.out.println("["+String.format("%.2f", curTermTime) + "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " + isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
+								curTermTime = times;
+								isBreathTermCnt = 0;
+								isBreathTermCntOpp = 0;
+								isBreathTerm = false;
+								beforeTermWord=BREATH;
+							}
+						}
+						//1. 연속된 소리가 되는 기준 정보를 초기화 한다.
+						//1-1. 기준 정보의 기준 시간은 기준 시간이 0이거나, 숨쉬는 구간 카운트가 0이며, 숨쉬기 아님 카운트가 0일 경우 초기화 한다.
+						if (curTermTime == 0 || (isBreathTermCnt == 0 && isOSATermCnt == 0)) {
+							curTermTime = times;
+						}
+						// 1-1. 기준 정보의 데시벨만 계속 초기화 한다. (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음, 로그용으로
+						// 초기화)
+						curTermDb = decibel;
+						curTermAmp = amplitude;
+						curTermHz = frequency;
+						curTermSecondHz = sefrequency;
+						targetStream.close();
+						i++;
+						sumCnt++;
+					}
+					System.out.println("audio length(s): " + ((double) (audioData.length / (44100d * 16 * 1))) * 8);
 		    } catch (IOException e) {
 				e.printStackTrace();
 			}

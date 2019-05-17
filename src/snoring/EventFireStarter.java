@@ -73,7 +73,9 @@ public class EventFireStarter {
 		fileList.add("raw/Matt Script - TEETH CHATTERING_FAST_MOVEMENT_MOUTH OPEN.wav");
 		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/veryclearrepeating.wav");
-		
+		//fileList = new ArrayList<String>();
+		fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
+		fileList.add("raw/What does Sleep Apnea sound like.wav");
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}
