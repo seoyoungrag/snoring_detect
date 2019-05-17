@@ -102,73 +102,9 @@ public class EventFireGui extends JFrame {
 		contentPane.add(pane);
 		InputStream fin;
 		try {
-			//String filePath = "raw/180335__sankalp__snoring-3.wav"; //코골이 인식함
-			//String filePath = "raw/425582__deleted-user-2731495__freesound-mix-recording-1.wav";//코골이 아닌데 인식한지 모르겠음, 여러 소리가 섞여있음.
-			//String filePath = "raw/50292__freesound__144-fake-rain-normalized.wav"; //코골이 아니며, 아니라고 인식함.
-			//String filePath = "raw/25263__freesound__orgasm-ses2.wav"; //Invalid Wave Header
-			//String filePath = "raw/114609__daxter31__snoring.wav"; //WaveHeader: only supports bitsPerSample 8 or 162
-			//String filePath = "raw/182758__poorenglishjuggler__snoring.wav"; //코골이 인식함
-			//String filePath = "raw/432996__mattyharm__male-snore-2.wav"; //Invalid Wave Header0
-			//String filePath = "raw/466792__hoganthelogan__snoring.wav";//Invalid Wave Header
-			//String filePath = "raw/345687__inspectorj__comedic-whistle-b.wav"; //코골이 아니며, 아니라고 인식함.
-			//String filePath = "raw/234867__mlsulli__snoring.wav";
-			//String filePath = "raw/340995__filmscore__young-woman-snoring.wav";
-			//String filePath = "raw/341042__vikuserro__snore.wav";
-			//44100 16 1 
-			/*filePath = "raw/235873__delphidebrain__sjuulke-snoring-1.wav";
-			
-
-			filePath = "raw/401334__ckvoiceover__man-coughing.wav";
-			filePath = "raw/178997__bigtexan7213__coughing.wav";
-			filePath = "raw/252240__reitanna__real-cough.wav";
-			filePath = "raw/41386__sandyrb__db-cough-002.wav";
-			filePath = "raw/348364__frostyfrost__cough.wav";
-			filePath = "raw/155858__rutgermuller__footsteps-in-factory-hall-on-wood-and-concrete.wav";
-			filePath = "raw/194825__macphage__gravel3.wav";
-			filePath = "raw/180535__suz-soundcreations__footsteps-snow-mono-44-16.wav";
-			filePath = "raw/259639__stevious42__footsteps-in-street-woman.wav";
-			filePath = "raw/267499__purplewalrus23__footsteps-on-rough-gravel.wav";
-			filePath = "raw/175954__freefire66__footsteps.wav";
-			filePath = "raw/195132__philter137__walking-from-wood-to-path.wav";
-			filePath = "raw/259646__stevious42__footsteps-in-the-street.wav";
-			filePath = "raw/48212__slothrop__footsteps.wav";
-			filePath = "raw/198962__mydo1__footsteps-on-wood.wav";
-			filePath = "raw/223152__yoyodaman234__glass-footstep-1.wav";
-			filePath = "raw/238608__shart69__talking-creature.wav";
-			filePath = "raw/428777__pauliperez1999__bimbo-girl-3.wav";
-			filePath = "raw/460651__noamp2003__roomtone-kids-talking.wav";
-			filePath = "raw/164606__steveukguy__class-a-female-talking-1.wav";
-			filePath = "raw/61036__timtube__talking-3.wav";
-			filePath = "raw/361928__toiletrolltube__161009-0085-lw-radio.wav";
-			filePath = "raw/61945__noisecollector__radio.wav";
-			filePath = "raw/156220__framixo__radionoize-0.wav";
-			filePath = "raw/69012__lex0myko1__am-147-305mhz.wav";
-			filePath = "raw/431118__inspectorj__door-front-closing-a.wav";
-			filePath = "raw/205951__ryding__alarm-01.wav";
-			filePath = "raw/93639__benboncan__personal-alarm.wav";
-			filePath = "raw/244917__kwahmah-02__house-alarm.wav";
-			filePath = "raw/345230__embracetheart__ceiling-fan-indoor.wav";
-			filePath = "raw/435518__sromon__swtch-and-start-the-fan-ambiance.wav";
-			filePath = "raw/40621__acclivity__sleepingbeauty.wav";
-			filePath = "raw/77267__sagetyrtle__catsnores.wav";
-			filePath = "raw/180535__suz-soundcreations__footsteps-snow-mono-44-16.wav";
-			filePath = "raw/259639__stevious42__footsteps-in-street-woman.wav";
-			filePath = "raw/63103__robinhood76__00555-snoring-1-heavy-breath.wav";
-			filePath = "raw/69329__robinhood76__00966-baby-snoring-2.wav";
-			filePath = "raw/61605__andune__schnauf.wav";
-			filePath = "raw/235873__delphidebrain__sjuulke-snoring-1.wav";
-			filePath = "raw/40621__acclivity__sleepingbeauty.wav";
-			filePath = "raw/77267__sagetyrtle__catsnores.wav";
-			filePath = "raw/20545__sirplus__snore.wav";
-			filePath = "raw/377119__ejking17__20170112-the-zzz.wav";*/
 			fin = new FileInputStream(filePath); 		
 			Wave wave = new Wave(fin);
 			waveHeader = wave.getWaveHeader();
-			/*
-			System.out.println(waveHeader.getChannels());
-			System.out.println(waveHeader.getBitsPerSample());
-			System.out.println(waveHeader.getSampleRate());
-			*/
 			File file = new File(filePath);
 			audioData = new byte[(int) file.length()];
 			FileInputStream fis = new FileInputStream(file);
@@ -402,7 +338,6 @@ public class EventFireGui extends JFrame {
 	            File outputfile = new File("saved.png");
 	            ImageIO.write(theImage, "png", outputfile);
 */
-	            /*
 	            audioCalculator = new AudioCalculator();
 				frameBytes = new byte[snoringApi.frameByteSize];
 			    try {
@@ -431,12 +366,16 @@ public class EventFireGui extends JFrame {
 			            //System.out.println(amp);
 			            //System.out.println(db);
 			            double times = (((double)(frameBytes.length/(44100d*16*1)))*8)*i;
+			            System.out.println(String.format("%.2f", times)+"s "+hz +" "+db+" "+amp+" "+sehz+" "+seamp);
 			            if(frequency>1000) {
+			            	/*
 		            	System.out.println(String.format("%.2f", times)+"s "
 		            			+ hz +" "+db+" "+amp+" "
 		            			//+sehz+" "+seamp
 		            			);
+		            			*/
 			            }
+			            
 			            if(frequency>=150 && frequency<=250 && sefrequency>=950 &&sefrequency<1050 
 			            		//&& amplitude < sefamplitude
 			            		) {
@@ -452,16 +391,12 @@ public class EventFireGui extends JFrame {
 			    } catch (IOException e) {
 					e.printStackTrace();
 				}
-	        } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-	        }*/
 	            //이갈이, 이갈이는 높은 주파수가 굉장히 짧은 간격으로 여러번 나타난다.
 	            //아래 1,2,3 무시, 다시-> 이갈이는 0.02~0.07초 사이의 큰 진폭을 갖는다. 즉, 0.01초 단위로 분석해서 연속으로 2~7회의 진폭이 발생하는 것을 잡으면 됨.
 	            //이 때, 진폭의 수치는 의미가 없을 수 있으므로 먼저 반복횟수로만 잡아본다.
 	            //1. 특정 주파수보다 높은 주파수가 --> 특정주파수 a=? 
 	            //2. 특정 시간동안 특정 횟수보다 많이 반복되는지 --> 특정시간 b=?, 특정횟수 c=?
-	            /*//3. 체크되면 이갈이다.
+	            //3. 체크되면 이갈이다.
             audioCalculator = new AudioCalculator();
 			frameBytes = new byte[snoringApi.frameByteSize];
 		    try {
@@ -483,9 +418,9 @@ public class EventFireGui extends JFrame {
 	            double termTime = 0.0;
 	            List<GrinderClass> gcl = new ArrayList<GrinderClass>();
 	            List<GrinderClass> gclOpp = new ArrayList<GrinderClass>();
-				//List<String> findedTimeAr = new ArrayList<String>();
-				//List<Integer> findedTimeCntAr = new ArrayList<Integer>();
-				//List<Double> findedHzAr = new ArrayList<Double>();
+				List<String> findedTimeAr = new ArrayList<String>();
+				List<Integer> findedTimeCntAr = new ArrayList<Integer>();
+				List<Double> findedHzAr = new ArrayList<Double>();
 				while( ( read = targetStream.read( frameBytes ) ) > 0 ){
 					if(frameBytes == null) {
 						frameBytes = new byte[snoringApi.frameByteSize];
@@ -555,6 +490,7 @@ public class EventFireGui extends JFrame {
 									||Math.floor(curTermAmp / 100) * 100 == Math.floor(amplitude / 100) * 100 
 									) { 
 								continueAmp++;
+								/*
 								System.out.println(String.format("%.2f", times) + "s " 
 								+ Math.abs(curTermDb) + ":" 
 								+ Math.abs(decibel)+ ":" 
@@ -568,30 +504,32 @@ public class EventFireGui extends JFrame {
 								+ Math.floor(amplitude / 10) * 10+", "
 								+ Math.floor(curTermAmp / 100) * 100+":"
 								+Math.floor(amplitude / 100) * 100 +"  "+continueAmp );
+								*/
 								curTermTime = times;
+								
 								curTermDb = decibel;
 								curTermAmp = amplitude;
 								curTermHz = frequency;
 								curTermSecondHz = sefrequency;
 								//System.out.println(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp+","+continueAmp);
-								
+								/*
 								System.out.println(Math.abs(curTermDb));
 								System.out.println(Math.abs(decibel));
 								System.out.println(Math.abs(Math.abs(curTermDb) - Math.abs(decibel)));
 								System.out.println(Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 5);
-								
+								*/
 								// 주파수 대역이 100의 자리에서 내림했을 때 동일한가?
 								
 								if (Math.floor(curTermSecondHz / 10) * 10 == Math.floor(sefrequency / 10) * 10||
 										Math.floor(curTermSecondHz / 100) * 100 == Math.floor(sefrequency / 100) * 100) {
-									
+									/*
 									System.out.println("==========SECOND AMP CHECK STA==============");
 									System.out.println(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp);
 									System.out.println( curTermDb + " " + Math.floor(sefrequency / 10) * 10);
 									System.out.println( Math.floor(curTermSecondHz / 10) * 10 + " " + Math.floor(sefrequency / 10) * 10);
 									System.out.println( Math.floor(curTermSecondHz / 100) * 100 + " " + Math.floor(sefrequency / 100) * 100);
 									System.out.println("==========SECOND AMP CHECK END==============");
-									
+									*/
 									continueAmp++;
 								}else {
 									if (continueAmp == 1) { // 특정 주파수로 1번 반복하는 것만 체크하자. 주파수가 동일한데 1번 연속되어야 하며 2번이상은 안된다.
@@ -605,14 +543,14 @@ public class EventFireGui extends JFrame {
 								}
 								
 							} else {
-
+/*
 								System.out.println("==========STARTING AMP CHECK STA==============");
 								System.out.println(String.format("%.2f", times) + "s " + hz + " " + db + " " + amp + " " + sehz + " " + seamp);
 								System.out.println( curTermDb + " " + decibel);
 								System.out.println( Math.floor(curTermSecondHz / 10) * 10 + " " + Math.floor(sefrequency / 10) * 10);
 								System.out.println( Math.floor(curTermSecondHz / 100) * 100 + " " + Math.floor(sefrequency / 100) * 100);
 								System.out.println("==========STARTING AMP CHECK END==============");
-								
+								*/
 								 //if(continueAmp<=7 && continueAmp>=2) { 
 								if (continueAmp == 1 || continueAmp == 2) { // 진폭, 주파수, 데시벨 각각 or 조건으로 1번 반복하는 것만 체크하자. 주파수가 동일한데 1번 연속되어야 하며 2번이상은 안된다.
 									gcl.add(new GrinderClass(String.format("%.2f", curTermTime), continueAmp, curTermHz, curTermSecondHz, curTermDb, curTermAmp));
@@ -670,7 +608,8 @@ public class EventFireGui extends JFrame {
 		            		//0.1초동안 비슷한 주파수 대역이 1번 이상 발생한 데이터 축적
 		            		//System.out.println("findedTimeCnt vs unchcekdFindedTimeCnt: "+findedTimeCnt+" vs" +unchcekdFindedTimeCnt);
 		            		if(findedTimeCnt<=2&& unchcekdFindedTimeCnt>findedTimeCnt) {
-		            			gcl.add(new GrinderClass(String.format("%.2f", curTermTime),findedTimeCnt ,curTermHz, curTermSecondHz)); 
+		            			gcl.add(new GrinderClass(String.format("%.2f", curTermTime),findedTimeCnt ,curTermHz, 
+										curTermSecondHz, curTermDb, curTermAmp));
 		            			
 		            			findedHzAr.add(curTermHz);
 			            		findedTimeAr.add(String.format("%.2f", curTermTime));
@@ -711,8 +650,10 @@ public class EventFireGui extends JFrame {
 				}
 				for (Object obj : timesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
+				    /*
 				    System.out.print("~초: " + entry.getKey());
 				    System.out.println(", 횟수: " + entry.getValue());
+				    */
 				}
 				HashMap<Integer, Integer> oppTimesValue = new HashMap<Integer,Integer>();
 				for(int j = 0 ; j <= audioLth ; j ++) {
@@ -725,8 +666,10 @@ public class EventFireGui extends JFrame {
 
 				for (Object obj : oppTimesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
+				    /*
 				    System.out.print("~초: " + entry.getKey());
 				    System.out.println(", 횟수: " + entry.getValue());
+				    */
 				}
 				
 
@@ -737,21 +680,22 @@ public class EventFireGui extends JFrame {
 				//연속 카운트
 				int continueCnt = 0 ;
 				int classficationCnt = 0;
-				System.out.println("진폭, 데시벨, 주파수를 이용해서 0.01초 단위로 1번만 발생하거나 2번 연속발생한 포먼트는 ");
+				
 				for (Object obj : timesValue.entrySet()) {
 				    Map.Entry<Integer, Integer> entry = (Map.Entry) obj;
-				    System.out.println(entry.getValue()+","+oppTimesValue.get(entry.getKey()));
+				    /*System.out.println(entry.getValue()+","+oppTimesValue.get(entry.getKey()));*/
 				    if(entry.getValue()>=2 && oppTimesValue.get(entry.getKey()) >= 60) {
 				    	continueCnt++;
 				    }else {
 				    	if(continueCnt>1) {
 				    		classficationCnt++;
+				    		System.out.println("진폭, 데시벨, 주파수를 이용해서 0.01초 단위로 1번만 발생하거나 2번 연속발생한 포먼트는 ");
 				    		System.out.println(entry.getKey()-continueCnt+"~"+entry.getKey()+"초,"+continueCnt+"발생");
 				    	}
 				    	continueCnt=0;
 				    }
 				}
-				System.out.println("grindCnt: "+gcl.size());
+				//System.out.println("grindCnt: "+gcl.size());
 				System.out.println("classficationCnt: "+classficationCnt);
 				//System.out.println("sumfindedTimeCnt: "+sumfindedTimeCnt/gcl.size());
 				double lowerMinHz = 0.0;
@@ -792,12 +736,17 @@ public class EventFireGui extends JFrame {
 						//System.out.println("higher :"+gc.toString());
 					}
 				}
+				/*
 				System.out.println("findedTimeAr: "+Arrays.toString(findedTimeAr.toArray()));
 				System.out.println("findedTimeCntAr: "+Arrays.toString(findedTimeCntAr.toArray()));
 				System.out.println("findedHzAr: "+Arrays.toString(findedHzAr.toArray()));
 				
 				System.out.println("lower range :"+lowerMinHz+"~"+lowerMaxHz);
-				System.out.println("higher range :"+higherMinHz+"~"+higherMaxHz);*/
+				System.out.println("higher range :"+higherMinHz+"~"+higherMaxHz);
+				*/
+		    } catch (IOException e) {
+				e.printStackTrace();
+			}
 
 	            /*무호흡증은 항상 코골이를 동반하며, 코골이의 시작하고 종료한 시간은 5~10초이내 숨을 쉬어야 하기 때문에 호흡이 가파른 느낌이 있다, 무호흡 코골이 시간이 종료한 후 숨을 멈추는 시간이 30~50초 이내이다.
 	             * 1.db세기로 무호흡코골이 및 호흡으로 측정되는 부분을 특정한다. 
