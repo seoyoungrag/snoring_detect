@@ -74,6 +74,8 @@ public class EventFireStarter {
 		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/veryclearrepeating.wav");
 		//fileList = new ArrayList<String>();
+		//fileList = new ArrayList<String>();
+		fileList.add("raw/Matt Script - TEETH GRINDING_GRIND_TOOTH_CREAK.wav");
 		fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
 		fileList.add("raw/What does Sleep Apnea sound like.wav");
 		for(String filePath : fileList) {
