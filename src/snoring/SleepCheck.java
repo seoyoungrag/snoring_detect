@@ -12,7 +12,7 @@ public class SleepCheck {
 	static double OSAcurTermTime = 0.0;
 	static double curTermDb = 0.0;
 	static int curTermAmp = 0;
-	static double chkDb = -10;
+	static double grindChkDb = -10;
 
 	static double chkOSADb = -9;
 	static boolean isBreathTerm = false;
@@ -34,10 +34,19 @@ public class SleepCheck {
 	static int snoringCheckCnt = 0;
 	static int snoringContinue = 0;
 	static int snoringContinueOpp = 0;
+	
+	static int checkTermSecond = 0;
+	static int curTermSecond = 0;
 
+	static int GRINDING_RECORDING_CONTINUE_CNT = 1;
+	
+	static int decibelSum = 0;
+	static int decibelSumCnt = 0;
 	static int snoringCheck(double decibel, double frequency, double sefrequency) {
 
-		if (decibel > chkDb && frequency >= 150 && frequency <= 250 && sefrequency >= 950 && sefrequency < 1050
+		if (
+				//decibel > grindChkDb && 
+				frequency >= 150 && frequency <= 250 && sefrequency >= 950 && sefrequency < 1050
 		// && amplitude < sefamplitude
 		) {
 			snoringContinue++;
@@ -45,12 +54,16 @@ public class SleepCheck {
 			snoringContinueOpp++;
 		}
 		//System.out.println(checkTerm+" "+snoringContinue+" "+ snoringContinueOpp);
+		
+		//아래는 의미 없음. sta
 		if (checkTerm % 300 == 0 && snoringContinue >= 60 && snoringContinueOpp <= 240) {
 			int tmpI = snoringContinue;
 			snoringContinue = 0;
 			snoringContinueOpp = 0;
 			return tmpI;
 		}
+		//end
+		
 		return 0;
 	}
 
@@ -67,8 +80,6 @@ public class SleepCheck {
 		// 분석하는 소리의 길이는 0.01초.
 		// 아래는 0.01초 데이터를 0.1초 단위로 분석X
 
-		// System.out.println(String.format("%.2f", times)+"s "+hz +" "+db+" "+amp+"
-		// "+sehz+" "+seamp);
 		// 소리가 평균 크기보다 클 때 분석한다.
 		// -> 이갈이는 소리 폭이 너무 커서 평균 측정 소리 때문에 측정이 안될 수 도 있다.-> 평균 소리보다 2배 이상 진폭이 크면 평균치에
 		// 합산 안함.
@@ -79,31 +90,67 @@ public class SleepCheck {
 
 		// System.out.println(times+" - "+termTime+" =
 		// "+String.valueOf(times-termTime));
-
+		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond);
 		// 데시벨이 더 높고 주파수대역이 100의 자리에서 내림했을 때 동일하며, 0.02초 동안만 반복되어야 한다.(1번 반복)X
-		if (decibel > chkDb && (
+		if (decibel > grindChkDb 
 		// curTermDb >= decibel && // 비교기준이 되는 데시벨은 고점이어야 한다.X -> 고점에서 점차 데시벨이 내려오는것은 다른
 		// 사운드와 동일한 특징이다. 비슷한 대역의 소리가 계속 발생하는것을 찾아야한다.
+				/*&& (
 		Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 1 // 데시벨 오차 범위가 1db 이면 같은 이어지는 소리로 판단한다.
-
-				|| Math.floor(curTermHz / 10) * 10 == Math.floor(frequency / 10) * 10
-				|| Math.floor(curTermHz / 100) * 100 == Math.floor(frequency / 100) * 100
-
-				|| Math.floor(curTermAmp / 10) * 10 == Math.floor(amplitude / 10) * 10
-				|| Math.floor(curTermAmp / 100) * 100 == Math.floor(amplitude / 100) * 100
-
-						&& (Math.floor(curTermSecondHz / 10) * 10 == Math.floor(sefrequency / 10) * 10
-								|| Math.floor(curTermSecondHz / 100) * 100 == Math.floor(sefrequency / 100) * 100))) {
+		//주파수가 같아야함.
+		&& (
+				// 100보다 큰 경우 십의 자리 까지 버리고 비교한다.
+				(frequency > 100 && curTermHz > 100 && (int)curTermHz / 100 != (int)frequency / 100 ) 
+				||
+				// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
+				(frequency < 10 && curTermHz < 10 && (int)curTermHz / 10 != (int)frequency / 10 )
+				||
+				// 100보다 큰 경우 십의 자리 까지 버리고 비교한다.
+				(sefrequency > 100 && curTermSecondHz > 100 && (int)curTermSecondHz / 100 != (int)sefrequency / 100 ) 
+				||
+				// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
+				(sefrequency < 10 && curTermSecondHz < 10 && (int)curTermSecondHz / 10 != (int)sefrequency / 10 )
+				
+				)
+				)
+				*/
+				){
+			decibelSum += decibel;
+			decibelSumCnt++;
 			//0.01초 단위로 연속으로 반복하는 여부 카운트 증가 
 			grindingRepeatOnceAmpCnt++;
+			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
+			
+			/*
+			System.out.println("==========GRIND CHECK STA==============");
+			System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " );
+			System.out.println( curTermDb + " " + Math.abs(decibel));
 
+			System.out.println( (int)curTermHz / 100+ " " + (int)frequency / 100);
+			System.out.println( (int)curTermHz%100 / 10+ " " + (int)frequency%100 / 10);
+			System.out.println((frequency > 100 && curTermHz > 100 && (int)curTermHz / 100 != (int)frequency / 100 ) 
+					||
+					// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
+					(frequency < 10 && curTermHz < 10 && (int)curTermHz / 10 != (int)frequency / 10 ));
+			System.out.println( (int)curTermSecondHz / 100+ " " + (int)sefrequency / 100);
+			System.out.println( (int)curTermSecondHz%100 / 10+ " " + (int)sefrequency%100 / 10);
+			System.out.println((sefrequency > 100 && curTermSecondHz > 100 && (int)curTermSecondHz / 100 != (int)sefrequency / 100 ) 
+					||
+					// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
+					(sefrequency < 10 && curTermSecondHz < 10 && (int)curTermSecondHz / 10 != (int)sefrequency / 10 ));
+			System.out.println( (int)curTermAmp / 100+ " " + (int)amplitude / 100);
+			System.out.println( (int)curTermAmp%100 / 10+ " " + (int)amplitude%100 / 10);
+			System.out.println("==========GRIND CHECK END==============");
+			*/
 		} else {
-			//신호가 바뀔 때 연속 증가한 카운트가 2인 경우에만 유효카운트를 증가한다.
-			if (grindingRepeatOnceAmpCnt == 2) {
+			//신호가 바뀔 때 신호가 반복된 카운트가 1인 경우에만 유효카운트를 증가한다.
+			//System.out.println(String.format("%.2f", times) + "s " + grindingRepeatOnceAmpCnt);
+			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
+			if (grindingRepeatOnceAmpCnt <= 15 && grindingRepeatOnceAmpCnt>0) {
 				grindingContinueAmpCnt++;
-			}else {
-				grindingContinueAmpOppCnt++;	
+				//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
 			}
+			grindingContinueAmpOppCnt++;	
 			grindingRepeatOnceAmpCnt = 0;
 		}
 
@@ -113,8 +160,41 @@ public class SleepCheck {
 		// -> 즉 1번의 포먼트가 1초동안 3번 발생했는지 체크, 동시에 3회이상연속한 포먼트 카운트가 69를 넘어야함. 이 현상이 수초(2초)
 		// 동안 발생해야 함
 		// 연속 카운트
-		
+		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
+
+		//if (checkTerm % 100 == 0) { //분석단위가 0.11, 0.12초라 100이라는 수치는 오차가 발생한다.
+		//초를 계산해서 처리하도록 함.
+		//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
+		if (curTermSecond - checkTermSecond == 1) {
+			//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
+			if(grindingContinueAmpCnt >= 3
+					&& grindingContinueAmpCnt <=15 
+					&& grindingContinueAmpOppCnt >= 60
+					) {
+				grindingRepeatAmpCnt++;
+				//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt+" "+grindingRepeatAmpCnt);
+			}else {
+				grindingRepeatAmpCnt = 0;
+			}
+			grindingContinueAmpCnt = 0;
+			grindingContinueAmpOppCnt = 0;
+			decibelSum = 0;
+			decibelSumCnt = 0;
+		}
+
+		//무조건 반환하고, 2~3초 이상 지속되는지는 여기서 판단하지 않는다.
+		/*
+		if(grindingRepeatAmpCnt>=2) {
+			System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt+" "+grindingRepeatAmpCnt);
+			grindingRepeatAmpCnt = 0;
+			//grindingContinueAmpCnt=0;
+			//grindingContinueAmpOppCnt = 0;
+			return 1;
+		}
+		*/
+
 		//1초 단위로 유효카운트가 몇회인지 체크한다. 유효카운트가 범위에 해당하면, 몇초동안 지속되는지 체크한다.
+		/*
 		if (checkTerm % 100 == 0) {
 			if (//checkTerm % 100 == 0 &&
 					grindingRepeatAmpCnt >= 2 
@@ -140,6 +220,7 @@ public class SleepCheck {
 				grindingContinueAmpOppCnt = 0;
 			}
 		}
+		*/
 		return 0;
 	}
 
@@ -169,7 +250,7 @@ public class SleepCheck {
 			 */
 
 			if (isOSATerm == true) {
-				// 무호흡에서 호흡으로 넘어오는 경우 오차범위가 3초는 넘어야 무호흡구간으로 본다.
+				// 무호흡에서 호흡으로 넘어오는 경우 오차범위가 5초는 넘어야 무호흡구간으로 본다.
 				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 500) {
 					/*
 					 * if(beforeTermWord.equals(OSA)) { System.out.println("["+String.format("%.2f",
@@ -180,16 +261,15 @@ public class SleepCheck {
 					 * isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]"); curTermTime = times;
 					 * }
 					 */
-					/*
 					System.out.println("[" + String.format("%.2f", OSAcurTermTime) + "~" + String.format("%.2f", times)
 							+ "s, isOSATermCnt: " + isOSATermCnt + ", isOSATermCntOpp:" + isOSATermCntOpp + "]");
-					*/
+					double tmpD = OSAcurTermTime;
 					OSAcurTermTime = times;
 					isOSATerm = false;
 					isOSATermCnt = 0;
 					isOSATermCntOpp = 0;
 					// beforeTermWord=OSA;
-					return (int) (times-OSAcurTermTime);
+					return (int) (times-tmpD);
 				} else {
 					// System.out.println("[ignore term, "+String.format("%.2f", curTermTime) +
 					// "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+",
@@ -258,12 +338,6 @@ public class SleepCheck {
 		if (OSAcurTermTime == 0 || (isBreathTermCnt == 0 && isOSATermCnt == 0)) {
 			OSAcurTermTime = times;
 		}
-		// 1-1. 기준 정보의 데시벨만 계속 초기화 한다. (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음, 로그용으로
-		// 초기화)
-		curTermDb = decibel;
-		curTermAmp = amplitude;
-		curTermHz = frequency;
-		curTermSecondHz = sefrequency;
 		return 0;
 	}
 }

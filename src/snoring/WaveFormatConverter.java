@@ -18,6 +18,54 @@ import com.sun.media.sound.WaveFileWriter;
 
 public class WaveFormatConverter {
 
+	static public void  saveWave(String filePath, byte[] audioData, InputStream fin, FileInputStream fis, File file, Wave wave, WaveHeader waveHeader, String fileName) throws UnsupportedAudioFileException, IOException{
+		System.out.println(fileName+ "----------------------save start");
+		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(filePath));
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(audioInputStream);
+		audioInputStream = new AudioInputStream(bufferedInputStream, audioInputStream.getFormat(), audioInputStream.getFrameLength());
+		AudioFormat format = audioInputStream.getFormat();
+		WaveFileWriter wfw = new WaveFileWriter();
+		AudioFormat monoFormat = new AudioFormat(format.getEncoding(), format.getSampleRate(), format.getSampleSizeInBits(), 1, format.getFrameSize(), format.getFrameRate(), format.isBigEndian());
+
+		int length = audioData.length;
+		ByteArrayInputStream bais = new ByteArrayInputStream(audioData);
+
+		AudioInputStream stereoStream = new AudioInputStream(bais, format, length);
+		AudioInputStream monoStream = new AudioInputStream(stereoStream, monoFormat, length);
+
+		String destFilePath = "raw/raw_convert/test-save-"+fileName+"_"+System.currentTimeMillis()+".wav";
+		File destFile = new File(destFilePath);
+		if(destFile.exists()) {
+			destFile.delete();
+		}
+		wfw.write(monoStream, javax.sound.sampled.AudioFileFormat.Type.WAVE,
+				new File(destFilePath));
+
+/*
+        ReadWAV2Array audioTest = new ReadWAV2Array(destFilePath, true);
+        double[] rawData = audioTest.getByteArray();
+        length = rawData.length;
+
+        //initialize parameters for FFT
+        int WS = 2048; //WS = window size
+        int OF = 8;    //OF = overlap factor
+
+        //calculate FFT parameters
+        double SR = audioTest.getSR();
+        double time_resolution = WS/SR;
+        double frequency_resolution = SR/WS;
+        double highest_detectable_frequency = SR/2.0;
+        double lowest_detectable_frequency = 5.0*SR/WS;
+        System.out.println("SampleRate:                   " + SR + " ");
+        System.out.println("time_resolution:              " + time_resolution*1000 + " ms");
+        System.out.println("frequency_resolution:         " + frequency_resolution + " Hz");
+        System.out.println("highest_detectable_frequency: " + highest_detectable_frequency + " Hz");
+        System.out.println("lowest_detectable_frequency:  " + lowest_detectable_frequency + " Hz");
+
+		System.out.println("audio length(s): "+((double)(audioData.length/(44100d*16*1)))*8); 
+        */
+		System.out.println(fileName+ "----------------------save end");
+	}
 	static public void  stereoToMono(String filePath, byte[] audioData, InputStream fin, FileInputStream fis, File file, Wave wave, WaveHeader waveHeader) throws UnsupportedAudioFileException, IOException{
 
 		System.out.println("convert start");
