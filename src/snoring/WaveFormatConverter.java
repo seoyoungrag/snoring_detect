@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -16,9 +17,30 @@ import com.musicg.wave.Wave;
 import com.musicg.wave.WaveHeader;
 import com.sun.media.sound.WaveFileWriter;
 
+	
 public class WaveFormatConverter {
 
-	static public void  saveWave(String filePath, byte[] audioData, InputStream fin, FileInputStream fis, File file, Wave wave, WaveHeader waveHeader, String fileName) throws UnsupportedAudioFileException, IOException{
+	static public String saveLongTermWave(byte[] audioData, String fileName) throws UnsupportedAudioFileException, IOException{
+		System.out.println(fileName+ "----------------------save start");
+		WaveFileWriter wfw = new WaveFileWriter();
+		AudioFormat monoFormat = new AudioFormat(Encoding.PCM_SIGNED, 44100.0f, 16, 1, 2, 44100.0f, false);
+
+		int length = audioData.length;
+		ByteArrayInputStream bais = new ByteArrayInputStream(audioData);
+
+		AudioInputStream monoStream = new AudioInputStream(bais, monoFormat, length);
+
+		String destFilePath = "raw/raw_convert/event-"+fileName+"_"+System.currentTimeMillis()+".wav";
+		File destFile = new File(destFilePath);
+		if(destFile.exists()) {
+			destFile.delete();
+		}
+		wfw.write(monoStream, javax.sound.sampled.AudioFileFormat.Type.WAVE, new File(destFilePath));
+		System.out.println(fileName+ "----------------------save end");
+		return destFilePath;
+	}
+	
+	static public void saveWave(String filePath, byte[] audioData, InputStream fin, FileInputStream fis, File file, Wave wave, WaveHeader waveHeader, String fileName) throws UnsupportedAudioFileException, IOException{
 		System.out.println(fileName+ "----------------------save start");
 		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(filePath));
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(audioInputStream);

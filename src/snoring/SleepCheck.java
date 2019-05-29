@@ -42,26 +42,92 @@ public class SleepCheck {
 	
 	static int decibelSum = 0;
 	static int decibelSumCnt = 0;
-	static int snoringCheck(double decibel, double frequency, double sefrequency) {
+	
+	static int EXCEPTION_DB_FOR_AVR_DB = -10;
+	static int AVR_DB_CHECK_TERM = 300;
+	static int AVR_DB_INIT_VALUE = -100;
+	static int NOISE_DB_INIT_VALUE = -10;
+	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
+	static int noiseChkSum = 0;
+	static int noiseNoneChkSum = 0;
+	static int noiseChkCnt = 0;
+
+	static double GrindingCheckTermSecond = 0;
+	static double GrindingCheckStartTermSecond = 0;
+	static double GrindingCheckStartTermDecibel = 0;
+	static boolean GrindTermCheckBoolean = false;
+	
+	static double getAvrDB(double decibel) {
+		double avrDB = -AVR_DB_INIT_VALUE;
+		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
+			decibelSum = 0;
+			decibelSumCnt = 0;
+		}
+		if (decibel < EXCEPTION_DB_FOR_AVR_DB) {
+			decibelSum += decibel;
+			decibelSumCnt++;
+		}
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		return avrDB;
+	}
+
+	
+	static double getAvrDB() {
+		double avrDB = -AVR_DB_INIT_VALUE;
+		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
+			decibelSum = 0;
+			decibelSumCnt = 0;
+		}
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		return avrDB;
+	}
+
+	static int noiseCheck(double decibel) {
+		//1분동안 소리가 발생하지 않았는지 체크한다.
+		if(noiseChkCnt>=100) {
+			int tmpN = noiseChkCnt;
+			noiseChkSum = 0;
+			noiseNoneChkSum = 0;
+			return tmpN;
+		}else {
+			if(decibel > NOISE_DB_INIT_VALUE) {
+				noiseChkSum++;
+			}else {
+				noiseNoneChkSum++;
+			}
+			noiseChkCnt++;
+			return 101;
+		}
+		
+	}
+
+	static int snoringCheck(double decibel, double frequency, double sefrequency) {
 		if (
-				//decibel > grindChkDb && 
+				decibel > grindChkDb && 
 				frequency >= 150 && frequency <= 250 && sefrequency >= 950 && sefrequency < 1050
 		// && amplitude < sefamplitude
 		) {
 			snoringContinue++;
+			return 1;
 		} else {
 			snoringContinueOpp++;
 		}
 		//System.out.println(checkTerm+" "+snoringContinue+" "+ snoringContinueOpp);
 		
 		//아래는 의미 없음. sta
+		/*
 		if (checkTerm % 300 == 0 && snoringContinue >= 60 && snoringContinueOpp <= 240) {
 			int tmpI = snoringContinue;
 			snoringContinue = 0;
 			snoringContinueOpp = 0;
 			return tmpI;
 		}
+		*/
 		//end
 		
 		return 0;
@@ -115,10 +181,22 @@ public class SleepCheck {
 				)
 				*/
 				){
-			decibelSum += decibel;
-			decibelSumCnt++;
-			//0.01초 단위로 연속으로 반복하는 여부 카운트 증가 
-			grindingRepeatOnceAmpCnt++;
+			//0.01초 단위로 연속으로 반복하는 여부 카운트 증가
+			//매우 짧은 간격 으로 높은 데시벨이 연속 된다고 하고, 이 간격은 0.02초이며, 0.02초가 지나면, 체크중인 이갈이 평균 데시벨로 부터 2데시벨이 차이나면, 반대 카운트를 증가한다. 
+			if(grindingRepeatOnceAmpCnt==0) {
+				GrindingCheckStartTermDecibel = decibel;
+			}else {
+				GrindingCheckStartTermDecibel = (GrindingCheckStartTermDecibel+decibel) / grindingRepeatOnceAmpCnt;
+			}
+			if(grindingRepeatOnceAmpCnt>=2) {
+				if(decibel > grindingRepeatOnceAmpCnt) {
+					grindingContinueAmpOppCnt++;	
+				}else {
+					grindingRepeatOnceAmpCnt++;
+				}
+			}else {
+				grindingRepeatOnceAmpCnt++;
+			}
 			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
 			
 			/*
@@ -146,7 +224,10 @@ public class SleepCheck {
 			//신호가 바뀔 때 신호가 반복된 카운트가 1인 경우에만 유효카운트를 증가한다.
 			//System.out.println(String.format("%.2f", times) + "s " + grindingRepeatOnceAmpCnt);
 			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
-			if (grindingRepeatOnceAmpCnt <= 15 && grindingRepeatOnceAmpCnt>0) {
+			if (grindingRepeatOnceAmpCnt <= 4 && grindingRepeatOnceAmpCnt>=2) {
+				if(grindingContinueAmpCnt == 0) {
+					GrindingCheckStartTermSecond = times;
+				}
 				grindingContinueAmpCnt++;
 				//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
 			}
@@ -165,21 +246,20 @@ public class SleepCheck {
 		//if (checkTerm % 100 == 0) { //분석단위가 0.11, 0.12초라 100이라는 수치는 오차가 발생한다.
 		//초를 계산해서 처리하도록 함.
 		//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
-		if (curTermSecond - checkTermSecond == 1) {
-			//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
+		if (Math.floor((GrindingCheckTermSecond - GrindingCheckStartTermSecond)*100) == 101) {
+			//System.out.println(curTermSecond + "~"+checkTermSecond+"s, grindingContinueAmpCnt:"+grindingContinueAmpCnt+", grindingContinueAmpOppCnt:"+grindingContinueAmpOppCnt+", grindingRepeatAmpCnt:"+grindingRepeatAmpCnt);
 			if(grindingContinueAmpCnt >= 3
 					&& grindingContinueAmpCnt <=15 
-					&& grindingContinueAmpOppCnt >= 60
+					&& grindingContinueAmpOppCnt >= 50
 					) {
 				grindingRepeatAmpCnt++;
 				//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt+" "+grindingRepeatAmpCnt);
 			}else {
 				grindingRepeatAmpCnt = 0;
+				//System.out.println("여기8");
 			}
 			grindingContinueAmpCnt = 0;
 			grindingContinueAmpOppCnt = 0;
-			decibelSum = 0;
-			decibelSumCnt = 0;
 		}
 
 		//무조건 반환하고, 2~3초 이상 지속되는지는 여기서 판단하지 않는다.
@@ -263,6 +343,10 @@ public class SleepCheck {
 					 */
 					System.out.println("[" + String.format("%.2f", OSAcurTermTime) + "~" + String.format("%.2f", times)
 							+ "s, isOSATermCnt: " + isOSATermCnt + ", isOSATermCntOpp:" + isOSATermCntOpp + "]");
+
+					EventFireGui.osaTermList.add(new StartEnd());
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=OSAcurTermTime;
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
 					double tmpD = OSAcurTermTime;
 					OSAcurTermTime = times;
 					isOSATerm = false;
