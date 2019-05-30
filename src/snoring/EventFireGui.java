@@ -64,7 +64,7 @@ public class EventFireGui {
 			SleepCheck.grindingContinueAmpCnt = 0;
 			SleepCheck.grindingContinueAmpOppCnt = 0;
 			SleepCheck.grindingRepeatAmpCnt = 0;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			//ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			boolean isRecording = false;
 			@SuppressWarnings("unused")
 			long recordStartingTIme = 0L;
@@ -98,22 +98,22 @@ public class EventFireGui {
 			        final String hz = String.valueOf(frequency + "Hz");
 			        final String sehz = String.valueOf(sefrequency + "Hz(2th)");
 			        final String seamp = String.valueOf(sefamplitude + "Amp(2th)");
-
-					if (i < 100) {
+			        SleepCheck.setAvrDB(decibel);
+					if (i < 1000) {
 						continue;
 					}
 					// 소리의 발생은 특정 db 이상으로한다. 데시벨은 -31.5~0 으로 수치화 하고 있음.
 					// -10db에 안걸릴 수도 잇으니까, 현재 녹음 상태의 평균 데시벨값을 지속적으로 갱신하면서 평균 데시벨보다 높은 소리가 발생했는지 체크
 					// 한다.
 					// 평균 데시벨 체크는 3초 동안한다.
-					if (decibel > SleepCheck.NOISE_DB_INIT_VALUE && isRecording == false
+					if (decibel > SleepCheck.getAvrDB() && isRecording == false
 							&& Math.floor((double) (audioData.length / (44100d * 16 * 1)) * 8) != Math.floor(times) //사운드 파일 테스트용
 							) {
 						System.out.print("녹음 시작! ");
 						System.out.println(String.format("%.2f", times)+"s~");
 						recordStartingTIme = System.currentTimeMillis();
-						baos = new ByteArrayOutputStream();
-						baos.write(frameBytes);
+						//baos = new ByteArrayOutputStream();
+						//baos.write(frameBytes);
 						isRecording = true;
 					} else if (isRecording == true && SleepCheck.noiseCheck(decibel)==0) {
 						System.out.print("녹음 종료! ");
@@ -123,9 +123,9 @@ public class EventFireGui {
 						dayTime = new SimpleDateFormat("dd_hhmm");
 						long time = System.currentTimeMillis();
 						fileName += "-" + dayTime.format(new Date(time));
-						byte[] waveData = baos.toByteArray();
+						//byte[] waveData = baos.toByteArray();
 						//TODO 녹음된 파일이 저장되는 시점
-						filePath = WaveFormatConverter.saveLongTermWave(waveData, fileName);
+						//filePath = WaveFormatConverter.saveLongTermWave(waveData, fileName);
 						System.out.println("=====녹음중 분석 종료, 분석정보 시작=====");
 						System.out.println("녹음파일 길이(s): " + ((double) (audioData.length / (44100d * 16 * 1))) * 8);
 						Analysis ans = new Analysis();
@@ -186,9 +186,9 @@ public class EventFireGui {
 						dayTime = new SimpleDateFormat("dd_hhmm");
 						long time = System.currentTimeMillis();
 						fileName += "-" + dayTime.format(new Date(time));
-						byte[] waveData = baos.toByteArray();
+						//byte[] waveData = baos.toByteArray();
 						//TODO 녹음된 파일이 저장되는 시점
-						filePath = WaveFormatConverter.saveLongTermWave(waveData, fileName);
+						//filePath = WaveFormatConverter.saveLongTermWave(waveData, fileName);
 						SimpleDateFormat dayTimeT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 						System.out.println("=====녹음중 분석 종료, 분석정보 시작=====");
 						System.out.println("녹음파일 길이(s): " + ((double) (audioData.length / (44100d * 16 * 1))) * 8);
@@ -248,7 +248,7 @@ public class EventFireGui {
 						isRecording = false;
 					}
 					if( isRecording == false) { continue; }
-                    baos.write(frameBytes);
+                    //baos.write(frameBytes);
 					/*
 					System.out.print("녹음 중! ");
 					System.out.println(String.format("%.2f", times)+"s ");
@@ -257,20 +257,31 @@ public class EventFireGui {
 					// 녹음이 끝나고 나면 코골이가 발생했는지를 체크해서 녹음된 파일의 코골이 유무를 결정한다. X
 					// 코골이 여부를 체크한다.
 					int snoreChecked = SleepCheck.snoringCheck(decibel, frequency, sefrequency);
-					if(snoreChecked==1) {
-						if(snoringTermList.size()>0) {
-							double beforeTime = snoringTermList.get(snoringTermList.size()-1).start;
-							if(Math.floor(beforeTime)+100<Math.floor(times)) {
-								snoringTermList.add(new StartEnd());
-								snoringTermList.get(snoringTermList.size()-1).start=times;
-								snoringTermList.get(snoringTermList.size()-1).end=times;		
-							}
+					//snorChecked = 1이면 0.01초에 해당하는 주파수만 탐지됨
+					//snorChecked = 2는 1분동안 코골이가 탐지된 상태 
+					if(snoreChecked==2) {
+						if(SleepCheck.isSnoringStart == true) {
+							//코골이로 탐지해서 분석을 진행하고 있는 중
 						}else {
-							snoringTermList.add(new StartEnd());	
-							snoringTermList.get(0).start=times;
-							snoringTermList.get(0).end=times;
+							System.out.print("코골이 기록를 시작한다.");
+							System.out.println(String.format("%.2f", times) + "~" + String.format("%.2f", times + 1) + "s");
+							snoringTermList.add(new StartEnd());
+							snoringTermList.get(snoringTermList.size()-1).start=times;
+							SleepCheck.isSnoringStart = true;
 						}
+					}else if(snoreChecked == 3) {
+						if(SleepCheck.isSnoringStart == true) {
+							System.out.println("코골이 기록 종료");
+							System.out.println(String.format("%.2f", times) + "~" + String.format("%.2f", times + 1) + "s");
+							snoringTermList.get(snoringTermList.size()-1).end=times;	
+							SleepCheck.isSnoringStart = false;
+						}else {
+							//코골이로 미탐지, 처리할 내용 없음.
+						}
+					}else {
+						//0일 때는 아직 분석하고 1분이 안된 상태, 즉 각 1분이 안된 때마다 이곳을 탄다.
 					}
+					
 					if(SleepCheck.grindingRepeatAmpCnt!=0) {
 						//System.out.println(SleepCheck.curTermSecond+"vs"+SleepCheck.GrindingCheckStartTermSecond);
 					}
@@ -280,7 +291,7 @@ public class EventFireGui {
 					// 이갈이 신호가 발생하고, 이갈이 체크 상태가 아니면 이갈이 체크를 시작한다.
 					//System.out.println(grindingStart+" "+SleepCheck.curTermSecond + " "+SleepCheck.GrindingCheckStartTermSecond+" "+SleepCheck.grindingRepeatAmpCnt+" "+SleepCheck.grindingContinueAmpOppCnt);
 					if (SleepCheck.grindingRepeatAmpCnt == 2 && grindingStart == false) {
-						System.out.print("이갈이 체크를 시작한다.");
+						System.out.print("이갈이 기록을 시작한다.");
 						System.out.println(String.format("%.2f", times) + "~" + String.format("%.2f", times + 1)
 								+ "s " + SleepCheck.grindingContinueAmpCnt + " "
 								+ SleepCheck.grindingContinueAmpOppCnt + " " + SleepCheck.grindingRepeatAmpCnt);
@@ -375,11 +386,9 @@ public class EventFireGui {
 						osaRecordingExit--;
 					}
 					if (osaCnt > 0 && osaStart == false) {
-						/*
 						System.out.print("무호흡 체크를 시작한다.");
 						System.out.println(String.format("%.2f", times) + "s~" + SleepCheck.isOSATerm + " "
 								+ SleepCheck.isBreathTerm + " " + SleepCheck.isOSATermCnt);
-						*/
 						osaStart = true;
 						osaContinue = false;
 						osaRecordingExit = 0;
@@ -387,24 +396,20 @@ public class EventFireGui {
 					} else if (times - osaStartTimes < 5 && osaStart == true) {
 						// 무호흡 녹음 중 5초 이내에 호흡이 발생하면, 무호흡이 아닌 것으로 본다.
 						if (osaRecordingContinueCnt < 5) {
-							/*
 							System.out.print("무호흡 체크 취소. " + osaRecordingContinueCnt + ", ");
 							System.out.println(String.format("%.2f", times) + "~"
 									+ String.format("%.2f", times + 0.01) + "s " + SleepCheck.isOSATerm + " "
 									+ SleepCheck.isBreathTerm + " " + SleepCheck.isOSATermCnt);
-							*/
 							osaStart = false;
 							osaRecordingContinueCnt = 0;
 						} else {
 							if (((double) (audioData.length / (44100d * 16 * 1))) * 8 < times + 1) {
-								/*
 								System.out.print("무호흡 끝.");
 								System.out.println(
 										String.format("%.2f", times) + "~" + String.format("%.2f", times + 1) + "s "
 												+ SleepCheck.grindingContinueAmpCnt + " "
 												+ SleepCheck.grindingContinueAmpOppCnt + " "
 												+ SleepCheck.grindingRepeatAmpCnt);
-								*/
 								osaStart = false;
 								osaRecordingContinueCnt = 0;
 							}
@@ -420,14 +425,12 @@ public class EventFireGui {
 					} else if (times - osaStartTimes > 5 && osaStart == true) {
 						if (SleepCheck.isBreathTerm == true) { // 숨쉬는 구간이 되었으면, 체크 계속 플래그를 업데이트
 							if (((double) (audioData.length / (44100d * 16 * 1))) * 8 < times + 1) {
-								/*
 								System.out.print("무호흡 끝.");
 								System.out.println(
 										String.format("%.2f", times) + "~" + String.format("%.2f", times + 1) + "s "
 												+ SleepCheck.grindingContinueAmpCnt + " "
 												+ SleepCheck.grindingContinueAmpOppCnt + " "
 												+ SleepCheck.grindingRepeatAmpCnt);
-								*/
 								osaStart = false;
 								osaRecordingContinueCnt = 0;
 							}
@@ -500,10 +503,10 @@ public class EventFireGui {
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		} catch (UnsupportedAudioFileException e1) {
+		} /*catch (UnsupportedAudioFileException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 
 	}
 

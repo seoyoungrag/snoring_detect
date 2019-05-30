@@ -40,12 +40,12 @@ public class SleepCheck {
 
 	static int GRINDING_RECORDING_CONTINUE_CNT = 1;
 	
-	static int decibelSum = 0;
-	static int decibelSumCnt = 0;
+	static double decibelSum = 0;
+	static double decibelSumCnt = 0;
 	
 	static int EXCEPTION_DB_FOR_AVR_DB = -10;
-	static int AVR_DB_CHECK_TERM = 300;
-	static int AVR_DB_INIT_VALUE = -100;
+	static int AVR_DB_CHECK_TERM = 6000;
+	static double AVR_DB_INIT_VALUE = -31.5;
 	static int NOISE_DB_INIT_VALUE = -10;
 	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
@@ -58,6 +58,10 @@ public class SleepCheck {
 	static double GrindingCheckStartTermDecibel = 0;
 	static boolean GrindTermCheckBoolean = false;
 	
+	static double MAX_DB = 31.5;
+	
+	static boolean isSnoringStart = false;
+	/*
 	static double getAvrDB(double decibel) {
 		double avrDB = -AVR_DB_INIT_VALUE;
 		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
@@ -73,8 +77,8 @@ public class SleepCheck {
 		}
 		return avrDB;
 	}
-
-	
+*/
+	/*
 	static double getAvrDB() {
 		double avrDB = -AVR_DB_INIT_VALUE;
 		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
@@ -86,16 +90,52 @@ public class SleepCheck {
 		}
 		return avrDB;
 	}
+	 */
 
+	static double getAvrDB() {
+		/*
+		double avrDB = -AVR_DB_INIT_VALUE;
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
+		*/
+		return MAX_DB*2 > AVR_DB_INIT_VALUE ? Math.floor(AVR_DB_INIT_VALUE) : MAX_DB*2;
+	}
+
+	static double setAvrDB(double decibel) {
+		//10분마다 평균 데시벨을 다시 계산한다.
+		if(decibel > MAX_DB) {
+			decibel = MAX_DB;
+		}
+		/*
+		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
+			decibelSum = 0;
+			decibelSumCnt = 0;
+		}
+		double avrDB = -AVR_DB_INIT_VALUE;
+		decibelSum += decibel;
+		decibelSumCnt ++;
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		*/
+		return MAX_DB*2 > AVR_DB_INIT_VALUE? Math.floor(AVR_DB_INIT_VALUE) : MAX_DB*2;
+	}
 	static int noiseCheck(double decibel) {
 		//1분동안 소리가 발생하지 않았는지 체크한다.
-		if(noiseChkCnt>=100) {
+		//0.01초 단위임으로, 600번 해야 60초임.
+		//1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
+		if(noiseChkCnt>=600) {
 			int tmpN = noiseChkCnt;
 			noiseChkSum = 0;
 			noiseNoneChkSum = 0;
 			return tmpN;
 		}else {
-			if(decibel > NOISE_DB_INIT_VALUE) {
+			//아직 1분이 안되었으면 계속 소리 체크를 한다.
+			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
+			//리턴이 0이면 녹음 종료하게 되어있음.
+			if(decibel > getAvrDB()) {
 				noiseChkSum++;
 			}else {
 				noiseNoneChkSum++;
@@ -108,12 +148,11 @@ public class SleepCheck {
 
 	static int snoringCheck(double decibel, double frequency, double sefrequency) {
 		if (
-				decibel > grindChkDb && 
+				//decibel > getAvrDB(decibel)*1.2 && 
 				frequency >= 150 && frequency <= 250 && sefrequency >= 950 && sefrequency < 1050
 		// && amplitude < sefamplitude
 		) {
 			snoringContinue++;
-			return 1;
 		} else {
 			snoringContinueOpp++;
 		}
@@ -129,7 +168,16 @@ public class SleepCheck {
 		}
 		*/
 		//end
-		
+		if(snoringContinue+snoringContinueOpp>6000) {
+			//1분동안 주파수 탐지 횟수가 1~2번 혹은 10~15(앞은 무호흡, 뒤는 일본 코골이)인 경우 코골이를 했다고 판단. 
+			if((snoringContinue <= 2 && snoringContinue >=1 )|| (snoringContinue >= 10 && snoringContinue <= 15)) {
+				return 2;
+			}else {
+				snoringContinue = 0;
+				snoringContinueOpp = 0;
+				return 3;
+			}
+		}
 		return 0;
 	}
 
@@ -158,7 +206,8 @@ public class SleepCheck {
 		// "+String.valueOf(times-termTime));
 		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond);
 		// 데시벨이 더 높고 주파수대역이 100의 자리에서 내림했을 때 동일하며, 0.02초 동안만 반복되어야 한다.(1번 반복)X
-		if (decibel > grindChkDb 
+		//System.out.print("grindingChkDb:" +decibel +"vs" + getAvrDB()*1.1+" ");
+		if (decibel > getAvrDB()*1.2 
 		// curTermDb >= decibel && // 비교기준이 되는 데시벨은 고점이어야 한다.X -> 고점에서 점차 데시벨이 내려오는것은 다른
 		// 사운드와 동일한 특징이다. 비슷한 대역의 소리가 계속 발생하는것을 찾아야한다.
 				/*&& (
@@ -312,7 +361,8 @@ public class SleepCheck {
 	 */
 	static int OSACheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
 		// 2. 기준 데시벨보다 높은 소리라면 호흡(혹은 코골이) 구간인지 체크한다.
-		if (decibel > chkOSADb) {
+		//System.out.println("OSACheckDb:" +decibel +"vs" + getAvrDB()*1.05);
+		if (decibel > getAvrDB()*1.05) {
 			// 2-1. 데시벨을 이용해서 연속된 소리인지 체크한다.
 			// 2-1-1. 연속된 소리인지 체크하기 위해서는 비슷한 데시벨인지만 체크한다.
 			// (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음.)
@@ -331,7 +381,7 @@ public class SleepCheck {
 
 			if (isOSATerm == true) {
 				// 무호흡에서 호흡으로 넘어오는 경우 오차범위가 5초는 넘어야 무호흡구간으로 본다.
-				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 500) {
+				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 3000) {
 					/*
 					 * if(beforeTermWord.equals(OSA)) { System.out.println("["+String.format("%.2f",
 					 * curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " +
