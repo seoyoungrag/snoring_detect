@@ -82,9 +82,12 @@ public class EventFireStarter {
 		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/63103__robinhood76__00555-snoring-1-heavy-breath.wav");
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
+		//fileList = new ArrayList<String>();
+		//fileList.add("raw/2019_05_30_03_27_48.wav");
+
 		fileList = new ArrayList<String>();
-		fileList.add("raw/2019_05_30_03_27_48.wav");
-		
+		//fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
+		fileList.add("raw/What does Sleep Apnea sound like.wav");
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}

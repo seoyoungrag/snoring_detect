@@ -45,7 +45,8 @@ public class SleepCheck {
 	
 	static int EXCEPTION_DB_FOR_AVR_DB = -10;
 	static int AVR_DB_CHECK_TERM = 6000;
-	static double AVR_DB_INIT_VALUE = -31.5;
+	static double MAX_DB_CRIT_VALUE = -31.5;
+	static double MIN_DB_CRIT_VALUE = -10;
 	static int NOISE_DB_INIT_VALUE = -10;
 	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
@@ -58,9 +59,13 @@ public class SleepCheck {
 	static double GrindingCheckStartTermDecibel = 0;
 	static boolean GrindTermCheckBoolean = false;
 	
-	static double MAX_DB = 31.5;
+	static double MAX_DB = -31.5;
+	static double MIN_DB = 0;
 	
 	static boolean isSnoringStart = false;
+	
+	static boolean isOSATermTimeOccur = false;
+	static boolean isOSAAnsStart = false;
 	/*
 	static double getAvrDB(double decibel) {
 		double avrDB = -AVR_DB_INIT_VALUE;
@@ -92,7 +97,7 @@ public class SleepCheck {
 	}
 	 */
 
-	static double getAvrDB() {
+	static double getMinDB() {
 		/*
 		double avrDB = -AVR_DB_INIT_VALUE;
 		if (decibelSum != 0 && decibelSumCnt != 0) {
@@ -100,13 +105,13 @@ public class SleepCheck {
 		}
 		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
 		*/
-		return MAX_DB*2 > AVR_DB_INIT_VALUE ? Math.floor(AVR_DB_INIT_VALUE) : MAX_DB*2;
+		return MIN_DB/2 < MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
 	}
 
-	static double setAvrDB(double decibel) {
+	static double setMinDB(double decibel) {
 		//10분마다 평균 데시벨을 다시 계산한다.
-		if(decibel > MAX_DB) {
-			decibel = MAX_DB;
+		if(Math.abs(decibel) != 0 && decibel < MIN_DB) {
+			MIN_DB = decibel;
 		}
 		/*
 		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
@@ -120,7 +125,37 @@ public class SleepCheck {
 			avrDB = decibelSum / decibelSumCnt;
 		}
 		*/
-		return MAX_DB*2 > AVR_DB_INIT_VALUE? Math.floor(AVR_DB_INIT_VALUE) : MAX_DB*2;
+		return MIN_DB/2 < MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
+	}
+	static double getMaxDB() {
+		/*
+		double avrDB = -AVR_DB_INIT_VALUE;
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
+		*/
+		return MAX_DB*2 < MAX_DB_CRIT_VALUE ? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
+	}
+
+	static double setMaxDB(double decibel) {
+		//10분마다 평균 데시벨을 다시 계산한다.
+		if(Math.abs(decibel) != 0 && decibel > MAX_DB) {
+			MAX_DB = decibel;
+		}
+		/*
+		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
+			decibelSum = 0;
+			decibelSumCnt = 0;
+		}
+		double avrDB = -AVR_DB_INIT_VALUE;
+		decibelSum += decibel;
+		decibelSumCnt ++;
+		if (decibelSum != 0 && decibelSumCnt != 0) {
+			avrDB = decibelSum / decibelSumCnt;
+		}
+		*/
+		return MAX_DB*2 < MAX_DB_CRIT_VALUE? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
 	}
 	static int noiseCheck(double decibel) {
 		//1분동안 소리가 발생하지 않았는지 체크한다.
@@ -135,7 +170,7 @@ public class SleepCheck {
 			//아직 1분이 안되었으면 계속 소리 체크를 한다.
 			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
 			//리턴이 0이면 녹음 종료하게 되어있음.
-			if(decibel > getAvrDB()) {
+			if(decibel > getMaxDB()) {
 				noiseChkSum++;
 			}else {
 				noiseNoneChkSum++;
@@ -206,8 +241,8 @@ public class SleepCheck {
 		// "+String.valueOf(times-termTime));
 		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond);
 		// 데시벨이 더 높고 주파수대역이 100의 자리에서 내림했을 때 동일하며, 0.02초 동안만 반복되어야 한다.(1번 반복)X
-		//System.out.print("grindingChkDb:" +decibel +"vs" + getAvrDB()*1.1+" ");
-		if (decibel > getAvrDB()*1.2 
+		//System.out.println("grindingChkDb:" +decibel +"vs" + getMinDB()*1.1+" ");
+		if (decibel > getMinDB()*1.1
 		// curTermDb >= decibel && // 비교기준이 되는 데시벨은 고점이어야 한다.X -> 고점에서 점차 데시벨이 내려오는것은 다른
 		// 사운드와 동일한 특징이다. 비슷한 대역의 소리가 계속 발생하는것을 찾아야한다.
 				/*&& (
@@ -361,8 +396,8 @@ public class SleepCheck {
 	 */
 	static int OSACheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
 		// 2. 기준 데시벨보다 높은 소리라면 호흡(혹은 코골이) 구간인지 체크한다.
-		//System.out.println("OSACheckDb:" +decibel +"vs" + getAvrDB()*1.05);
-		if (decibel > getAvrDB()*1.05) {
+		//System.out.println("OSACheckDb:" +decibel +"vs" + getMinDB());
+		if (decibel > getMinDB()*0.9) {
 			// 2-1. 데시벨을 이용해서 연속된 소리인지 체크한다.
 			// 2-1-1. 연속된 소리인지 체크하기 위해서는 비슷한 데시벨인지만 체크한다.
 			// (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음.)
@@ -381,7 +416,8 @@ public class SleepCheck {
 
 			if (isOSATerm == true) {
 				// 무호흡에서 호흡으로 넘어오는 경우 오차범위가 5초는 넘어야 무호흡구간으로 본다.
-				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 3000) {
+				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 1000) {
+					isOSATermTimeOccur=false;
 					/*
 					 * if(beforeTermWord.equals(OSA)) { System.out.println("["+String.format("%.2f",
 					 * curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " +
@@ -391,12 +427,29 @@ public class SleepCheck {
 					 * isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]"); curTermTime = times;
 					 * }
 					 */
-					System.out.println("[" + String.format("%.2f", OSAcurTermTime) + "~" + String.format("%.2f", times)
+					System.out.println("![" + String.format("%.2f", OSAcurTermTime) + "~" + String.format("%.2f", times)
 							+ "s, isOSATermCnt: " + isOSATermCnt + ", isOSATermCntOpp:" + isOSATermCntOpp + "]");
-
-					EventFireGui.osaTermList.add(new StartEnd());
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=OSAcurTermTime;
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+					//분석이 종료되는 시점은 앞에서 분석된 시간으로부터 1분이상 초과된 경우에 종료하고, 아닌 경우에는 현재 시간을 end.times에 추가한다.
+					if(EventFireGui.osaTermList.size()>1) {
+						int beforeEndTime = (int) EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).end; //0이거나 값이 있거나
+						int currentTime = (int) times;
+						System.out.println(beforeEndTime +" "+ currentTime+"="+(currentTime-beforeEndTime));
+						if(currentTime - beforeEndTime > 60) { 
+							System.out.println("기록vo종료");
+							isOSAAnsStart = false;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+						}else {
+							System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList.addAll(
+									EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList);
+							EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+						}
+					}else { 
+						isOSAAnsStart = false;
+						EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+					}
+					
 					double tmpD = OSAcurTermTime;
 					OSAcurTermTime = times;
 					isOSATerm = false;
@@ -405,16 +458,39 @@ public class SleepCheck {
 					// beforeTermWord=OSA;
 					return (int) (times-tmpD);
 				} else {
-					// System.out.println("[ignore term, "+String.format("%.2f", curTermTime) +
-					// "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+",
-					// isOSATermCntOpp:"+isOSATermCntOpp+"]");
-					// curTermTime = time;
+					/*
+					System.out.println("[ignore term, "+String.format("%.2f", curTermTime) +
+					 "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
+					*/
+					//curTermTime = times;
 					isOSATerm = false;
 					isOSATermCnt = 0;
 					isOSATermCntOpp = 0;
 					// beforeTermWord=OSA;
 				}
 			} else {
+				//현재 데시벨이 기준 데시벨보다 크고, 무호흡 구간이 아닌 경우이다. 여기서 초기화를 해야한다.
+				//문제는 무호흡 구간이 아닌 경우 0.01초 단위로 계속 이곳을 타기 때문에, 한번만 초기화할 수 있어야 한다. 한번 초기화 했으면 다시 안하도록 한다.
+				//위에서 문제는 한번 초기화 한 경우 텀이 너무 길어진다는 문제가 있다. 앞에서부터의 15초 데이터만 저장하도록 한다.
+				//15초인 이유는 무호흡이 발생하는 데이터의 호흡시간이 15초 정도 발생하기 떄문이다.
+				//분석이 종료되는 시점은 앞에서 분석된 시간으로부터 1분이상 초과된 경우에 종료하고, 아닌 경우에는 현재 시간을 end.times에 추가한다.
+				//초기화를 한적이 있거나, 초기화하고 15초가 지났나?
+				if(!isOSATermTimeOccur || (isOSATermTimeOccur && times-OSAcurTermTime>15)) {
+					isOSAAnsStart = true;
+					OSAcurTermTime = times;
+					if(isOSATermTimeOccur && EventFireGui.osaTermList.size()>0) {
+						System.out.println("이전기록vo취소");
+						EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
+					}
+					System.out.println("기록vo생성");
+					EventFireGui.osaTermList.add(new StartEnd());
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=times;
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList = new ArrayList<AnalysisRawData>();
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList.add(new AnalysisRawData(times, amplitude, decibel, frequency, sefrequency, 0));
+					isOSATermTimeOccur = true;
+					System.out.println(OSAcurTermTime);
+				}
+				
 				isBreathTermCnt++;
 				isBreathTerm = true;
 			}
@@ -460,7 +536,16 @@ public class SleepCheck {
 				// System.out.println("["+String.format("%.2f", curTermTime) +
 				// "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " +
 				// isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
-				OSAcurTermTime = times;
+				//System.out.println("!!");
+				/*
+				if(times-OSAcurTermTime >15) {
+					OSAcurTermTime = times;
+					System.out.println(OSAcurTermTime);
+					EventFireGui.osaTermList.add(new StartEnd());
+					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=OSAcurTermTime;
+					isOSATermTimeOccur = true;
+				}
+				*/
 				isBreathTermCnt = 0;
 				isBreathTermCntOpp = 0;
 				isBreathTerm = false;
@@ -470,7 +555,8 @@ public class SleepCheck {
 		// 1. 연속된 소리가 되는 기준 정보를 초기화 한다.
 		// 1-1. 기준 정보의 기준 시간은 기준 시간이 0이거나, 숨쉬는 구간 카운트가 0이며, 숨쉬기 아님 카운트가 0일 경우 초기화 한다.
 		if (OSAcurTermTime == 0 || (isBreathTermCnt == 0 && isOSATermCnt == 0)) {
-			OSAcurTermTime = times;
+			//System.out.println("@@");
+			//OSAcurTermTime = times;
 		}
 		return 0;
 	}

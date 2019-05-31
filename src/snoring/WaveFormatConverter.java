@@ -144,4 +144,8 @@ public class WaveFormatConverter {
 
 		System.out.println("convert end");
 	}
+
+    public void convert() {
+    }
+	
 }
