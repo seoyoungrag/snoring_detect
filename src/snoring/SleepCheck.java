@@ -46,7 +46,7 @@ public class SleepCheck {
 	static int EXCEPTION_DB_FOR_AVR_DB = -10;
 	static int AVR_DB_CHECK_TERM = 6000;
 	static double MAX_DB_CRIT_VALUE = -31.5;
-	static double MIN_DB_CRIT_VALUE = -10;
+	static double MIN_DB_CRIT_VALUE = -20;
 	static int NOISE_DB_INIT_VALUE = -10;
 	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
@@ -141,8 +141,14 @@ public class SleepCheck {
 	static double setMaxDB(double decibel) {
 		//10분마다 평균 데시벨을 다시 계산한다.
 		if(Math.abs(decibel) != 0 && decibel > MAX_DB) {
-			MAX_DB = decibel;
+			MAX_DB = decibel-1;
 		}
+		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
+			decibelSumCnt = 0;
+			MAX_DB = -31.5;
+			MIN_DB = 0;
+		}
+		decibelSumCnt ++;
 		/*
 		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
 			decibelSum = 0;
@@ -242,7 +248,7 @@ public class SleepCheck {
 		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond);
 		// 데시벨이 더 높고 주파수대역이 100의 자리에서 내림했을 때 동일하며, 0.02초 동안만 반복되어야 한다.(1번 반복)X
 		//System.out.println("grindingChkDb:" +decibel +"vs" + getMinDB()*1.1+" ");
-		if (decibel > getMinDB()*1.1
+		if (decibel > getMinDB()*0.55
 		// curTermDb >= decibel && // 비교기준이 되는 데시벨은 고점이어야 한다.X -> 고점에서 점차 데시벨이 내려오는것은 다른
 		// 사운드와 동일한 특징이다. 비슷한 대역의 소리가 계속 발생하는것을 찾아야한다.
 				/*&& (
@@ -397,7 +403,7 @@ public class SleepCheck {
 	static int OSACheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
 		// 2. 기준 데시벨보다 높은 소리라면 호흡(혹은 코골이) 구간인지 체크한다.
 		//System.out.println("OSACheckDb:" +decibel +"vs" + getMinDB());
-		if (decibel > getMinDB()*0.9) {
+		if (decibel > getMinDB()*0.45) {
 			// 2-1. 데시벨을 이용해서 연속된 소리인지 체크한다.
 			// 2-1-1. 연속된 소리인지 체크하기 위해서는 비슷한 데시벨인지만 체크한다.
 			// (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음.)
