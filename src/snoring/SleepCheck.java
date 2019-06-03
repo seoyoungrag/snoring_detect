@@ -165,10 +165,11 @@ public class SleepCheck {
 	}
 	static int noiseCheck(double decibel) {
 		//1분동안 소리가 발생하지 않았는지 체크한다.
-		//0.01초 단위임으로, 600번 해야 60초임.
+		//0.01초 단위임으로, 6000번 해야 60초임.
 		//1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
-		if(noiseChkCnt>=600) {
-			int tmpN = noiseChkCnt;
+		if(noiseChkCnt>=6000) {
+			int tmpN = noiseChkSum;
+			noiseChkCnt = 0;
 			noiseChkSum = 0;
 			noiseNoneChkSum = 0;
 			return tmpN;
@@ -176,13 +177,15 @@ public class SleepCheck {
 			//아직 1분이 안되었으면 계속 소리 체크를 한다.
 			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
 			//리턴이 0이면 녹음 종료하게 되어있음.
-			if(decibel > getMaxDB()) {
+			if(decibel >= getMaxDB()) {
+				//noiseChkCnt++;
 				noiseChkSum++;
 			}else {
 				noiseNoneChkSum++;
 			}
 			noiseChkCnt++;
-			return 101;
+			return 6001;
+			//return noiseChkCnt;
 		}
 		
 	}
@@ -441,11 +444,11 @@ public class SleepCheck {
 						int currentTime = (int) times;
 						System.out.println(beforeEndTime +" "+ currentTime+"="+(currentTime-beforeEndTime));
 						if(currentTime - beforeEndTime > 60) { 
-							System.out.println("기록vo종료");
+							//System.out.println("기록vo종료");
 							isOSAAnsStart = false;
 							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
 						}else {
-							System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
+							//System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
 							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList.addAll(
 									EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList);
 							EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
@@ -485,16 +488,16 @@ public class SleepCheck {
 					isOSAAnsStart = true;
 					OSAcurTermTime = times;
 					if(isOSATermTimeOccur && EventFireGui.osaTermList.size()>0) {
-						System.out.println("이전기록vo취소");
+						//System.out.println("이전기록vo취소");
 						EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
 					}
-					System.out.println("기록vo생성");
+					//System.out.println("기록vo생성");
 					EventFireGui.osaTermList.add(new StartEnd());
 					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=times;
 					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList = new ArrayList<AnalysisRawData>();
 					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList.add(new AnalysisRawData(times, amplitude, decibel, frequency, sefrequency, 0));
 					isOSATermTimeOccur = true;
-					System.out.println(OSAcurTermTime);
+					//System.out.println(OSAcurTermTime);
 				}
 				
 				isBreathTermCnt++;

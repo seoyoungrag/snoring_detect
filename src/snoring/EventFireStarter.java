@@ -10,11 +10,11 @@ import java.util.List;
 public class EventFireStarter {
 
 	public static void main(String[] args) {
-		/*try {
-			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("log/console.out")), true));
+		try {
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("log/console2.out")), true));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}*/
+		}
 		List<String> fileList = new ArrayList<String>();
 		/*
 		fileList.add("raw/392327__alienxxx__musical-table.wav");
@@ -88,6 +88,8 @@ public class EventFireStarter {
 		fileList = new ArrayList<String>();
 		//fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
 		fileList.add("raw/What does Sleep Apnea sound like.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/s107FY1JHHyr.wav");
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}
