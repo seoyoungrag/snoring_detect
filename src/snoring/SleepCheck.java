@@ -44,16 +44,19 @@ public class SleepCheck {
 	static double decibelSumCnt = 0;
 	
 	static int EXCEPTION_DB_FOR_AVR_DB = -10;
-	static int AVR_DB_CHECK_TERM = 6000;
+	static int AVR_DB_CHECK_TERM = 2000;
 	static double MAX_DB_CRIT_VALUE = -31.5;
-	static double MIN_DB_CRIT_VALUE = -20;
+	static double MIN_DB_CRIT_VALUE = -30;
 	static int NOISE_DB_INIT_VALUE = -10;
 	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
 	static int noiseChkSum = 0;
 	static int noiseNoneChkSum = 0;
 	static int noiseChkCnt = 0;
-
+	static int noiseChkForStartSum = 0;
+	static int noiseNoneChkForStartSum = 0;
+	static int noiseChkForStartCnt = 0;
+	
 	static double GrindingCheckTermSecond = 0;
 	static double GrindingCheckStartTermSecond = 0;
 	static double GrindingCheckStartTermDecibel = 0;
@@ -105,7 +108,7 @@ public class SleepCheck {
 		}
 		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
 		*/
-		return MIN_DB/2 < MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
+		return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
 	}
 
 	static double setMinDB(double decibel) {
@@ -125,7 +128,7 @@ public class SleepCheck {
 			avrDB = decibelSum / decibelSumCnt;
 		}
 		*/
-		return MIN_DB/2 < MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
+		return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
 	}
 	static double getMaxDB() {
 		/*
@@ -175,9 +178,9 @@ public class SleepCheck {
 			return tmpN;
 		}else {
 			//아직 1분이 안되었으면 계속 소리 체크를 한다.
-			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
-			//리턴이 0이면 녹음 종료하게 되어있음.
-			if(decibel >= getMaxDB()) {
+			//소리 체크는 1분동안 평균 데시벨보다 최저 임계 데시벨의 소리가 발생했는지를 체크한다.
+			//리턴이 0이면 녹음 종료하게 되어있음.X
+			if(decibel >= getMinDB()) {
 				//noiseChkCnt++;
 				noiseChkSum++;
 			}else {
@@ -190,6 +193,32 @@ public class SleepCheck {
 		
 	}
 
+	static int noiseCheckForStart(double decibel) {
+		//1분동안 소리가 발생하지 않았는지 체크한다.
+		//0.01초 단위임으로, 6000번 해야 60초임.
+		//1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
+		if(noiseChkForStartCnt>=200) {
+			int tmpN = noiseChkForStartSum;
+			noiseChkForStartCnt = 0;
+			noiseChkForStartSum = 0;
+			noiseNoneChkForStartSum = 0;
+			return tmpN;
+		}else {
+			//아직 1분이 안되었으면 계속 소리 체크를 한다.
+			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
+			//리턴이 0이면 녹음 종료하게 되어있음.
+			if(decibel >= getMinDB()) {
+				//noiseChkCnt++;
+				noiseChkForStartSum++;
+			}else {
+				noiseNoneChkForStartSum++;
+			}
+			noiseChkForStartCnt++;
+			return -1;
+			//return noiseChkCnt;
+		}
+		
+	}
 	static int snoringCheck(double decibel, double frequency, double sefrequency) {
 		if (
 				//decibel > getAvrDB(decibel)*1.2 && 

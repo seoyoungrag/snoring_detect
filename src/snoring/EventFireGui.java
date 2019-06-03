@@ -75,7 +75,6 @@ public class EventFireGui {
 						frameBytes = new byte[frameByteSize];
 					}
 					audioCalculator.setBytes(frameBytes);
-					// 소리가 발생하면 녹음을 시작하고, 1분이상 소리가 발생하지 않으면 녹음을 하지 않는다.
 					int amplitude = audioCalculator.getAmplitude();
 					double decibel = audioCalculator.getDecibel();
 					double frequency = audioCalculator.getFrequency();
@@ -102,21 +101,39 @@ public class EventFireGui {
 					// -10db에 안걸릴 수도 잇으니까, 현재 녹음 상태의 평균 데시벨값을 지속적으로 갱신하면서 평균 데시벨보다 높은 소리가 발생했는지 체크
 					// 한다.
 					// 평균 데시벨 체크는 3초 동안한다.
-					//System.out.println("decibel:" +decibel +"vs" + SleepCheck.getAvrDB()+" ");
-					if (decibel > SleepCheck.getMaxDB() && isRecording == false
+					// 소리가 발생하면 녹음을 시작하고, 1분이상 소리가 발생하지 않으면 녹음을 하지 않는다.
+					if(decibel!=-31.5) {
+					/*	
+					*/
+					}
+					if(SleepCheck.noiseChkCnt>0) {
+
+						//System.out.print(String.format("%.2f", times)+"s "+hz +" "+db+" "+amp+" "+sehz+" "+seamp);
+						//System.out.print(" decibel:" +decibel +"vs" + SleepCheck.getMaxDB()+"vs" + SleepCheck.getMinDB());
+						//System.out.print(" noiseCheckForStart:" +SleepCheck.noiseChkForStartCnt+", "+SleepCheck.noiseChkForStartSum+", "+SleepCheck.noiseNoneChkSum);
+						//System.out.println(" noiseCheck:" +SleepCheck.noiseChkCnt+", "+SleepCheck.noiseChkSum);
+					}else {
+					}
+					
+					//if (decibel > SleepCheck.getMaxDB() && isRecording == false
+					if (SleepCheck.noiseCheckForStart(decibel) >= 30 && isRecording == false
 							&& Math.floor((double) (audioData.length / (44100d * 16 * 1)) * 8) != Math.floor(times) // 사운드
 																													// 파일
 																													// 테스트용
 					) {
-						System.out.print("녹음 시작! ");
+						System.out.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!녹음 시작! ");
 						System.out.println(String.format("%.2f", times) + "s~");
+						System.out.println(calcTime(times));
+						
 						recordStartingTIme = System.currentTimeMillis();
 						// baos = new ByteArrayOutputStream();
 						// baos.write(frameBytes);
 						isRecording = true;
-					} else if (isRecording == true && SleepCheck.noiseCheck(decibel) == 0) {
-						System.out.print("녹음 종료! ");
+					} else if (isRecording == true && SleepCheck.noiseCheck(decibel) <= 500) {
+						//System.out.println(" !!!!!!!!!!!!!!!!!!!!!!!!!" +SleepCheck.noiseCheck(decibel));
+						System.out.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!녹음 종료! ");
 						System.out.println(String.format("%.2f", times) + "s ");
+						System.out.println(calcTime(times));
 						SimpleDateFormat dayTime = new SimpleDateFormat("yyyymmdd_hhmm");
 						String fileName = dayTime.format(new Date(recordStartingTIme));
 						dayTime = new SimpleDateFormat("dd_hhmm");
@@ -126,7 +143,8 @@ public class EventFireGui {
 						// TODO 녹음된 파일이 저장되는 시점
 						// filePath = WaveFormatConverter.saveLongTermWave(waveData, fileName);
 						System.out.println("=====녹음중 분석 종료, 분석정보 시작=====");
-						System.out.println("녹음파일 길이(s): " + ((double) (audioData.length / (44100d * 16 * 1))) * 8);
+						//System.out.println("녹음파일 길이(s): " + ((double) (audioData.length / (44100d * 16 * 1))) * 8);
+						System.out.println("녹음파일 길이(s): "+ (time - recordStartingTIme));
 						Analysis ans = new Analysis();
 						ans.setAnalysisStartDt(LocalDateTime.ofInstant(Instant.ofEpochMilli(recordStartingTIme),
 								ZoneId.systemDefault()));
@@ -628,6 +646,17 @@ public class EventFireGui {
 
 	}
 
+	private String calcTime(double times) {
+        int seconds;
+        int minutes ;
+        int hours;
+        seconds =  (int)times;
+        hours = seconds / 3600;
+        minutes = (seconds%3600)/60;
+        int seconds_output = (seconds% 3600)%60;
+        return hours  + ":" + minutes + ":" + seconds_output +""; 
+	}
+
 }
 
 class StartEnd {
@@ -655,4 +684,5 @@ class StartEnd {
 		}
 		return rtn;
 	}
+	
 }
