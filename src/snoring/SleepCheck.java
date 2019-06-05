@@ -1,5 +1,6 @@
 package snoring;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -219,41 +220,30 @@ public class SleepCheck {
 		}
 		
 	}
-	static int snoringCheck(double decibel, double frequency, double sefrequency) {
-		if (
-				//decibel > getAvrDB(decibel)*1.2 && 
-				frequency >= 150 && frequency <= 250 && sefrequency >= 950 && sefrequency < 1050
-		// && amplitude < sefamplitude
-		) {
-			snoringContinue++;
-		} else {
-			snoringContinueOpp++;
-		}
-		//System.out.println(checkTerm+" "+snoringContinue+" "+ snoringContinueOpp);
+	static int snoringCheckNew(String times, double decibel, double frequency, double sefrequency, double[] allFHAndDB) {
 		
-		//아래는 의미 없음. sta
-		/*
-		if (checkTerm % 300 == 0 && snoringContinue >= 60 && snoringContinueOpp <= 240) {
-			int tmpI = snoringContinue;
-			snoringContinue = 0;
-			snoringContinueOpp = 0;
-			return tmpI;
-		}
-		*/
-		//end
-		if(snoringContinue+snoringContinueOpp>6000) {
-			//1분동안 주파수 탐지 횟수가 1~2번 혹은 10~15(앞은 무호흡, 뒤는 일본 코골이)인 경우 코골이를 했다고 판단. 
-			if((snoringContinue <= 2 && snoringContinue >=1 )|| (snoringContinue >= 10 && snoringContinue <= 15)) {
-				return 2;
-			}else {
-				snoringContinue = 0;
-				snoringContinueOpp = 0;
-				return 3;
-			}
-		}
-		return 0;
+		//allFhAndDB에 담긴 값과 decibel 값이 서로 다른 라이브러리를 쓰고 있어, 단위가 맞지 않는다.
+		//allFhAndDB의 범위는 알지 못하나 최대 81까지 최소는 -67 측정됨(, decibel ~31.5~0값임
+		//allFhAndDB의 범위가 더 크니까 allFhAndDB 보정해서 차이를 구한다.
+	    DecimalFormat df = new DecimalFormat("0.00");
+	    double d1 = -(31.5-allFHAndDB[0]/255*31.5);
+    	System.out.print(times+"\t");
+    	System.out.print(decibel+"\t");
+    	System.out.print(frequency+"\t");
+    	//System.out.print(df.format(d1)+"\t");
+    	//System.out.print(df.format(allFHAndDB[0])+"\t");
+    	System.out.println(df.format(Math.abs(decibel-d1)));
+    	if(Math.abs(decibel-d1)>Math.abs(decibel)/2){
+    		return 1;
+    	}else {
+    		return 0;
+    	}
 	}
 
+	static int snoringCheck(double decibel, double frequency, double sefrequency) {
+		System.out.println(decibel+" "+frequency);
+		return 0;
+	}
 	static int grindingCheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
 		// 이갈이, 이갈이는 높은 주파수가 굉장히 짧은 간격으로 여러번 나타난다.
 		// 아래 1,2,3 무시, 다시-> 이갈이는 0.02~0.07초 사이의 큰 진폭을 갖는다. 즉, 0.01초 단위로 분석해서 연속으로 2~7회의

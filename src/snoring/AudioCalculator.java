@@ -46,7 +46,18 @@ public class AudioCalculator {
         }
         return decibels;
     }
-    
+
+
+    public double[] getRealDecibels() {
+        if (amplitudes == null) amplitudes = getAmplitudesFromBytes(bytes);
+        if (decibels == null) {
+            decibels = new double[amplitudes.length];
+            for (int i = 0; i < amplitudes.length; i++) {
+                decibels[i] = resizeNumber(amplitudes[i]);
+            }
+        }
+        return decibels;
+    }
     public int[] getAmplitudeLevels() {
         if (amplitudes == null) getAmplitudes();
         int major = 0;
@@ -83,6 +94,9 @@ public class AudioCalculator {
         if (frequency == 0.0D) frequency = retrieveFrequency();
         return frequency;
     }
+    public double[] getFrequencyAll() {
+        return retrieveFrequencyAll();
+    }
 
     public double getFrequencySecondMax() {
         return retrieveFrequencySecondMax();
@@ -94,6 +108,23 @@ public class AudioCalculator {
         FrequencyCalculator frequencyCalculator = new FrequencyCalculator(sampleSize);
         frequencyCalculator.feedData(bytes, length);
         return frequencyCalculator.getFreqSecondN();
+    }
+
+    private double[] retrieveFrequencyAll() {
+        int length = bytes.length / 2;
+        int sampleSize = 8192;
+        while (sampleSize > length) sampleSize = sampleSize >> 1;
+
+        FrequencyCalculator frequencyCalculator = new FrequencyCalculator(sampleSize);
+        frequencyCalculator.feedData(bytes, length);
+        double [] allFreq = frequencyCalculator.getFreqAll();
+        double[] returnVal = new double[allFreq.length];
+        for(int i = 0 ; i <allFreq.length; i ++) {
+        	returnVal[i] = resizeNumber(allFreq[i]);
+        	//returnVal[i] = resizeNumber(allFreq[i])*0.0679558;
+        	//returnVal[i] = allFreq[i];
+        }
+        return returnVal;
     }
     
     private double retrieveFrequency() {

@@ -10,11 +10,13 @@ import java.util.List;
 public class EventFireStarter {
 
 	public static void main(String[] args) {
+		/*
 		try {
-			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("log/console2.out")), true));
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("log/console3.out")), true));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		*/
 		List<String> fileList = new ArrayList<String>();
 		/*
 		fileList.add("raw/392327__alienxxx__musical-table.wav");
@@ -73,6 +75,31 @@ public class EventFireStarter {
 		fileList.add("raw/Matt Script - TEETH CHATTERING_FAST_MOVEMENT_MOUTH OPEN.wav");
 		fileList.add("raw/20545__sirplus__snore.wav");
 		//fileList = new ArrayList<String>();
+		//fileList = new ArrayList<String>();
+		//fileList.add("raw/2019_05_30_03_27_48.wav");
+
+		fileList = new ArrayList<String>();
+		//fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
+		fileList.add("raw/What does Sleep Apnea sound like.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/s107FY1JHHyr.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/s107FY1JHHyr-康开-010.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/veryclearrepeating-康开-011.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/Matt Script - SINGLE BITE WITH TEETH_HUMAN_BITING-康开-012.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/114609__daxter31__snoring-康开-013.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/63103__robinhood76__00555-snoring-1-heavy-breath-康开-014.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/114609__daxter31__snoring.wav");
+		/*fileList = new ArrayList<String>();
+		fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/beep-01a.wav");
+		*/
 		fileList = new ArrayList<String>();
 		fileList.add("raw/veryclearrepeating.wav");
 		fileList.add("raw/Matt Script - TEETH GRINDING_GRIND_TOOTH_CREAK.wav");
@@ -82,14 +109,7 @@ public class EventFireStarter {
 		fileList.add("raw/20545__sirplus__snore.wav");
 		fileList.add("raw/63103__robinhood76__00555-snoring-1-heavy-breath.wav");
 		fileList.add("raw/235873__delphidebrain__sjuulke-snoring-1.wav");
-		//fileList = new ArrayList<String>();
-		//fileList.add("raw/2019_05_30_03_27_48.wav");
-
-		fileList = new ArrayList<String>();
-		//fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
-		fileList.add("raw/What does Sleep Apnea sound like.wav");
-		fileList = new ArrayList<String>();
-		fileList.add("raw/s107FY1JHHyr.wav");
+		fileList.add("raw/114609__daxter31__snoring.wav");
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}

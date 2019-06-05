@@ -1,5 +1,6 @@
 package snoring;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 
 public class FrequencyCalculator {
@@ -110,10 +111,10 @@ public class FrequencyCalculator {
 
         double maxAmpDB = 20 * Math.log10(0.125 / 32768);
         double maxAmpFreq = 0;
-        int sampleRate = 44100;
+        int sampleRate = 6000;
+        //int sampleRate = 6000;
         for (int i = 1; i < spectrumAmpOutDB.length; i++) {
-            //if (spectrumAmpOutDB[i] > maxAmpDB) {
-            if (spectrumAmpOutDB[i] > maxAmpDB && i * sampleRate / fftLen <1500) {
+            if (spectrumAmpOutDB[i] > maxAmpDB) {
                 maxAmpDB = spectrumAmpOutDB[i];
                 maxAmpFreq = i;
             }
@@ -126,6 +127,13 @@ public class FrequencyCalculator {
             double x3 = spectrumAmpOutDB[id + 1];
             double a = (x3 + x1) / 2 - x2;
             double b = (x3 - x1) / 2;
+            /*
+		    DecimalFormat df = new DecimalFormat("0.00");
+		    System.out.println(" ");
+            Arrays.stream(spectrumAmpOutDB).forEach(e -> System.out.print(df.format(e) + "\t" ));
+            System.out.println(" ");
+            */
+			
             if (a < 0) {
                 double xPeak = -b / (2 * a);
                 if (Math.abs(xPeak) < 1) {
@@ -136,6 +144,67 @@ public class FrequencyCalculator {
         return maxAmpFreq;
     }
 
+    public double[] getFreqAll() {
+        if (nAnalysed != 0) {
+            int outLen = spectrumAmpOut.length;
+            double[] sAOC = spectrumAmpOutCum;
+            for (int j = 0; j < outLen; j++) {
+                sAOC[j] /= nAnalysed;
+            }
+            System.arraycopy(sAOC, 0, spectrumAmpOut, 0, outLen);
+            Arrays.fill(sAOC, 0.0);
+            nAnalysed = 0;
+            for (int i = 0; i < outLen; i++) {
+                spectrumAmpOutDB[i] = 10.0 * Math.log10(spectrumAmpOut[i]);
+            }
+        }
+    	double[] returnVal = new double[spectrumAmpOut.length];
+
+        double maxAmpDB = 20 * Math.log10(0.125 / 32768);
+        double maxAmpFreq = 0;
+        int sampleRate = 44100;
+        for (int i = 0; i < spectrumAmpOutDB.length; i++) {
+            maxAmpDB = spectrumAmpOutDB[i];
+            maxAmpFreq = i;
+            maxAmpFreq = maxAmpFreq * sampleRate / fftLen;
+            if (sampleRate / fftLen < maxAmpFreq && maxAmpFreq < sampleRate / 2 - sampleRate / fftLen) {
+	            int id = (int) (Math.round(maxAmpFreq / sampleRate * fftLen));
+	            double x1 = spectrumAmpOutDB[id - 1];
+	            double x2 = spectrumAmpOutDB[id];
+	            double x3 = spectrumAmpOutDB[id + 1];
+	            double a = (x3 + x1) / 2 - x2;
+	            double b = (x3 - x1) / 2;
+	            if (a < 0) {
+	                double xPeak = -b / (2 * a);
+	                if (Math.abs(xPeak) < 1) {
+	                    maxAmpFreq += xPeak * sampleRate / fftLen;
+	                }
+	            }
+            }
+            /*
+            if (sampleRate / fftLen < maxAmpFreq && maxAmpFreq < sampleRate / 2 - sampleRate / fftLen) {
+                int id = (int) (Math.round(maxAmpFreq / sampleRate * fftLen));
+                double x1 = spectrumAmpOutDB[id - 1];
+                double x2 = spectrumAmpOutDB[id];
+                double x3 = spectrumAmpOutDB[id + 1];
+                double a = (x3 + x1) / 2 - x2;
+                double b = (x3 - x1) / 2;
+    		    DecimalFormat df = new DecimalFormat("0.00");
+                //Arrays.stream(spectrumAmpOutDB).forEach(e -> System.out.print(df.format(e) + "\t" ));
+    			
+                if (a < 0) {
+                    double xPeak = -b / (2 * a);
+                    if (Math.abs(xPeak) < 1) {
+                        maxAmpFreq += xPeak * sampleRate / fftLen;
+                    }
+                }
+                
+            }
+            */
+            returnVal[i]=maxAmpFreq;
+        }
+        return returnVal;
+    }
     public double getFreqSecondMax() {
     	/*
         if (nAnalysed != 0) {
