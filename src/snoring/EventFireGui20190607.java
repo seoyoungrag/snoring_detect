@@ -20,10 +20,9 @@ import snoring.scichart.DoubleValues;
 import snoring.scichart.Radix2FFT;
 import snoring.scichart.ShortValues;
 
-public class EventFireGui {
+public class EventFireGui20190607 {
 
 	byte[] audioData;
-	int frameByteSizeForSnoring = 1024*16;
 	int frameByteSize = 1024;
 	byte[] buffer;
 	byte[] totalBuf;
@@ -37,7 +36,7 @@ public class EventFireGui {
 	double tmpMaxDb = 0;
 
 	@SuppressWarnings("unused")
-	public EventFireGui(String filePath) {
+	public EventFireGui20190607(String filePath) {
 		InputStream fin;
 		try {
 			// 오디오 입력 테스트용, 이부분은 나중에 AudioRecord로 녹음하는 부분이 된다. sta
@@ -52,8 +51,8 @@ public class EventFireGui {
 			InputStream targetStream = new ByteArrayInputStream(audioData);
 			byte[] frameBytes = new byte[frameByteSize];
 			audioCalculator = new AudioCalculator();
-			byte[] frameBytesForSnoring = new byte[frameByteSizeForSnoring];
-			
+			frameBytes = new byte[frameByteSize];
+
 			SleepCheck.checkTerm = 0;
 			SleepCheck.checkTermSecond = 0;
 			SleepCheck.grindingContinueAmpCnt = 0;
@@ -76,22 +75,6 @@ public class EventFireGui {
 			double lowFHDecibelAvg = 0.0;
 			double firstDecibelAvg = 0.0;
 			double secondDecibelAvg = 0.0;
-			int snoringBufferFilledCnt = 0;
-			double[] allFHAndDB = null;
-			double sumU10 = 0;
-			double avgSumU10 = 0;
-			int grindingRepeatOnceAmpCnt = 0;
-			int grindingRepeatAmpCnt = 0;
-			int grindingContinueAmpCnt = 0;
-			int grindingContinueAmpOppCnt = 0;
-			double GrindingCheckTermSecond = 0;
-			double GrindingCheckStartTermSecond = 0;
-			double GrindingCheckStartTermDecibel = 0;
-			boolean grindingStart = false;
-			boolean grindingContinue = false;
-			int grindingRecordingContinueCnt = 0;
-			int GRINDING_RECORDING_CONTINUE_CNT = 1;
-
 			try {
 				targetStream = new ByteArrayInputStream(audioData);
 				System.out.println("분석 시작 "+filePath);
@@ -101,74 +84,65 @@ public class EventFireGui {
 					}
 					targetStream.close();
 					times = (((double) (frameBytes.length / (44100d * 16 * 1))) * 8) * i;
+					//전체 진폭을 가져온다.
+					//전체 진폭에 대한 주파수, 주파수의 갭=hzPerDataPoint
+					//전체 진폭에 대한 주파수 리스트 길이=fftSize
+					short[] tmpBytes = getAmplitudesFromBytesShort(frameBytes);
+					int bufferSize = frameBytes.length/2;
+					Radix2FFT fft = new Radix2FFT(bufferSize);
+				    double hzPerDataPoint = 44100d / bufferSize;
+				    int fftSize = (int) ((44100d / 2) / (44100d / bufferSize))	;
+				    tmpArray = new int[fftSize];
+			        for (int k = 0; k < fftSize; k ++) {
+			        	tmpArray[k] = (int) (k * hzPerDataPoint);
+			        }
+			        DoubleValues fftData = new DoubleValues();
+			        ShortValues shortValues = new ShortValues(tmpBytes);
+		            fft.run(shortValues, fftData);
+		            double[] allFHAndDB = fftData.getItemsArray();
+		            //전체 주파수/데시벨 표시 시작
+		            tmpMaxDb = 0;
+		            tmpMinDb = 99999;
+				    Arrays.stream(allFHAndDB).forEach(e ->{
+					    if( e > tmpMaxDb) {
+					    	tmpMaxDb = e;
+					    }
+					    if( e < tmpMinDb) {
+					    	tmpMinDb = e;
+					    }
+				    }
+				    );
+
 					//최대 주파수, 데시벨, 진폭 가져오기
 					audioCalculator.setBytes(frameBytes);
 					int amplitude = audioCalculator.getAmplitude();
 					double decibel = audioCalculator.getDecibel();
 					double frequency = audioCalculator.getFrequency();
 					double sefrequency = audioCalculator.getFrequencySecondMax();
-					
-					//전체 진폭을 가져온다.
-					//전체 진폭에 대한 주파수, 주파수의 갭=hzPerDataPoint
-					//전체 진폭에 대한 주파수 리스트 길이=fftSize
-					if(snoringBufferFilledCnt < 8) {
-						System.arraycopy(frameBytes,0,frameBytesForSnoring,frameBytes.length*snoringBufferFilledCnt,frameBytes.length);
-						snoringBufferFilledCnt++;
-					}
-					if(snoringBufferFilledCnt == 8) {
-						snoringBufferFilledCnt = 0;
-						short[] tmpBytes = getAmplitudesFromBytesShort(frameBytesForSnoring);
-						int bufferSize = frameBytesForSnoring.length/2;
-						Radix2FFT fft = new Radix2FFT(bufferSize);
-					    double hzPerDataPoint = 44100d / bufferSize;
-					    int fftSize = (int) ((44100d / 2) / (44100d / bufferSize))	;
-					    tmpArray = new int[fftSize];
-				        for (int k = 0; k < fftSize; k ++) {
-				        	tmpArray[k] = (int) (k * hzPerDataPoint);
-				        }
-				        DoubleValues fftData = new DoubleValues();
-				        ShortValues shortValues = new ShortValues(tmpBytes);
-			            fft.run(shortValues, fftData);
-			            allFHAndDB = fftData.getItemsArray();
-			            //전체 주파수/데시벨 표시 시작
-			            tmpMaxDb = 0;
-			            tmpMinDb = 99999;
-					    Arrays.stream(allFHAndDB).forEach(e ->{
-						    if( e > tmpMaxDb) {
-						    	tmpMaxDb = e;
-						    }
-						    if( e < tmpMinDb) {
-						    	tmpMinDb = e;
-						    }
+		            if(false) {
+					    DecimalFormat df = new DecimalFormat("0.00");
+					    if(i==0) { //분석 시작할 때 주파수 표시
+					    	System.out.print("시간\t\t");
+					    	Arrays.stream(tmpArray).forEach(e -> System.out.print(e + "\t" ));
+					    	System.out.println();
 					    }
-					    );
-			            if(false) {
-						    DecimalFormat df = new DecimalFormat("0.00");
-						    if(i==7) { //분석 시작할 때 주파수 표시
-						    	System.out.print("시간\t\t");
-						    	Arrays.stream(tmpArray).forEach(e -> System.out.print(e + "\t" ));
-						    	System.out.println();
-						    }
-							//시간별로 주파수/데시벨 표시
-							System.out.print(calcTime(times) + "s\t" );
-							//System.out.print(frequency + "HZ\t" );
-							//System.out.print(decibel + "DB\t" );
-						    //Arrays.stream(allFHAndDB).forEach(e -> System.out.print(df.format(e) + "\t" ));
-							System.out.print("avg:"+sumU10+"\t");
-							Arrays.stream(allFHAndDB).forEach(e ->{
-								//최대 최소치를 70으로 잡고, 정규화 하자
-								if(Math.abs(e)>70) {
-									e = 70;
-								}
-								//System.out.print(df.format( -(31.5-(Math.abs(e)/70)*31.5 )) + "\t" );
-								System.out.print(-(31.5-(Math.abs(e)/70)*31.5 ) + "\t" );
-								});
-						    
-							System.out.println(" ");
-			            }
-						//전체 주파수/데시벨 표시 끝
-			            
-					}
+						//시간별로 주파수/데시벨 표시
+						System.out.print(calcTime(times) + "s\t" );
+						//System.out.print(frequency + "HZ\t" );
+						//System.out.print(decibel + "DB\t" );
+					    //Arrays.stream(allFHAndDB).forEach(e -> System.out.print(df.format(e) + "\t" ));
+						Arrays.stream(allFHAndDB).forEach(e ->{
+							//최대 최소치를 70으로 잡고, 정규화 하자
+							if(Math.abs(e)>70) {
+								e = 70;
+							}
+							//System.out.print(df.format( -(31.5-(Math.abs(e)/70)*31.5 )) + "\t" );
+							System.out.print(-(31.5-(Math.abs(e)/70)*31.5 ) + "\t" );
+							});
+					    
+						System.out.println(" ");
+		            }
+					//전체 주파수/데시벨 표시 끝
 					i++; //시간 증가
 					
 					
@@ -227,17 +201,8 @@ public class EventFireGui {
 					}else if(chkSnoringDb<=-10) {
 						//chkSnoringDb = chkSnoringDb;
 					}
-					for(int q =5; q < 10 ; q++) {
-						double tmp1 = -(31.5-(Math.abs(allFHAndDB[q])/70)*31.5 );
-						if(tmp1 < SleepCheck.getMinDB() ) {
-							tmp1 = SleepCheck.getMinDB();
-						}
-						sumU10 += tmp1;
-					}
-					sumU10 = sumU10/5;
-
 					//코골이는 임계치를 보정해서 코골이의 음파 여부를 판단한다.
-				    if(decibel > chkSnoringDb && allFHAndDB!=null) {
+				    if(decibel > chkSnoringDb) {
 				    	//소리 발생체크하는 fft로직과 전체 주파수 데시벨을 가져오는 fft 로직이 달라서, 후자의 fft 데시벨 수치를 -31.5에 맞게 보정한다.
 				    	//샘플 fft 예제 및 실제 측정 결과 -75~87까지의 수치가 발생하는 것까지 확인함.
 				    	//이를 평준화 하기 위해 70을 임계치로 -31.5 db로 변환한다.
@@ -248,24 +213,8 @@ public class EventFireGui {
 							allFHAndDB[1] = 70;
 						}
 						//최대 최소치를 70으로 잡고, 정규화 하자
-						double forChkSnroingDb1 = -(31.5-(Math.abs(
-								(
-								allFHAndDB[0]
-								+allFHAndDB[1]
-								+allFHAndDB[2]
-								+allFHAndDB[3]
-								+allFHAndDB[4]
-								+allFHAndDB[5]
-										)/6
-										)/70)*31.5 ); 
-						double forChkSnroingDb2 = -(31.5-(Math.abs(
-								(
-								allFHAndDB[6]
-								+allFHAndDB[7]
-								+allFHAndDB[8]
-								+allFHAndDB[9]
-								+allFHAndDB[10]
-										)/5)/70)*31.5 ); 
+						double forChkSnroingDb1 = -(31.5-(Math.abs((allFHAndDB[0]+allFHAndDB[1])/2)/70)*31.5 ); 
+						double forChkSnroingDb2 = -(31.5-(Math.abs(allFHAndDB[2])/70)*31.5 ); 
 				    	//코골이 음파가 발생했음.
 				    	if(soundStartInRecording==false) {
 				    		//녹음 중에 소리가 발생했고 음파 시작은 아닌 상태, 음파 시작 상태로 변환
@@ -285,24 +234,21 @@ public class EventFireGui {
 				    		//lowFHDecibelAvg = forChkSnroingDb1;
 				    		firstDecibelAvg = 0;
 				    		secondDecibelAvg = 0;
-				    		avgSumU10 = 0;
 				    		//lowFHDecibelAvg = allFHAndDB[0];
 				    	}else {
 				    		//녹음 중에 소리가 발생했고 음파가 진행 중인 상태
 					    	//높은 데시벨 평균과 낮은 주파수 평균을 계산한다.
 				    		double timeGap = times-snoringTermList.get(snoringTermList.size()-1).start;
 				    		//System.out.println(calcTime(times)+"s forChkSnroingDb1: "+forChkSnroingDb1+" forChkSnroingDb2: "+forChkSnroingDb2+" firstDecibelAvg: "+firstDecibelAvg+" secondDecibelAvg: "+secondDecibelAvg);
-			    			if(timeGap > 0.3 && timeGap < 0.7){
+			    			if(timeGap > 0.2 && timeGap < 0.8){
 					    		//maxDecibelAvg = (maxDecibelAvg+decibel)/2;
 					    		//lowFHDecibelAvg = (lowFHDecibelAvg+forChkSnroingDb1)/2;
 			    				if(firstDecibelAvg == 0 || secondDecibelAvg == 0) {
 						    		firstDecibelAvg = forChkSnroingDb1;
 						    		secondDecibelAvg = forChkSnroingDb2;
-						    		avgSumU10 = sumU10;
 			    				}else {
 						    		firstDecibelAvg = (firstDecibelAvg+forChkSnroingDb1)/2;
 						    		secondDecibelAvg = (secondDecibelAvg+forChkSnroingDb2)/2;
-						    		avgSumU10 = (avgSumU10+sumU10)/2;
 			    				}
 					    		//System.out.println(calcTime(times)+"s firstDecibelAvg: "+firstDecibelAvg+" secondDecibelAvg: "+secondDecibelAvg);
 			    			}
@@ -349,8 +295,7 @@ public class EventFireGui {
 			    				//if(lowFHDecibelAvg < maxDecibelAvg &&  diffMaxToLow > maxDecibelAvg*2) {
 			    				//System.out.println(calcTime(times)+"s diffMaxToLow: "+diffMaxToLow+" Math.abs(diffMaxToLow): "+Math.abs(diffMaxToLow)+" (31.5-Math.abs(secondDecibelAvg)) / 2: "+(31.5-Math.abs(secondDecibelAvg)) / 2);
 			    				//if(diffMaxToLow < 0 && Math.abs(diffMaxToLow) > (31.5-Math.abs(secondDecibelAvg)) / 2) {
-			    				//if(diffMaxToLow < 0 && Math.abs(diffMaxToLow) > ((31.5-Math.abs(secondDecibelAvg))) / 4) {
-			    				if(diffMaxToLow <0 ) {
+			    				if(diffMaxToLow < 0 ) {
 			    					//1초가 벌어졌다면, 음파 진행된 동안의 최대 데시벨 평균과 평균 데시벨의 차이를 비교한다.
 				    				//낮은 주파수 평균이 데시벨의 절반보다 낮다면 코골이 카운트 증가
 			    					soundStartAndSnroingCnt++;
@@ -362,23 +307,18 @@ public class EventFireGui {
 				    				snoringTermList.get(snoringTermList.size()-1).end = times;
 				    				snoringTermList.get(snoringTermList.size()-1).low = firstDecibelAvg;
 				    				snoringTermList.get(snoringTermList.size()-1).max = secondDecibelAvg;
-				    				snoringTermList.get(snoringTermList.size()-1).chk = avgSumU10;
+				    				snoringTermList.get(snoringTermList.size()-1).chk = chkSnoringDb;
 			    				}else {
 				    				//코골이 카운트가 증가한 적이 없었다. 
 			    					//코골이 기록 vo 대신 이갈이 기록 vo로 넣는다.
-			    					//if(grindingRepeatOnceAmpCnt>1 && grindingRepeatOnceAmpCnt < 4) {
-			    					if(true) {
-							    		StartEnd st = new StartEnd();
-							    		st.start = snoringTermList.get(snoringTermList.size()-1).start;
-							    		st.end = times;
-							    		st.max = secondDecibelAvg;
-							    		st.low = firstDecibelAvg;
-							    		st.chk = avgSumU10;
-							    		snoringTermList.remove(snoringTermList.size()-1);
-							    		grindingTermList.add(st);
-			    					}else {
-							    		snoringTermList.remove(snoringTermList.size()-1);
-			    					}
+						    		StartEnd st = new StartEnd();
+						    		st.start = snoringTermList.get(snoringTermList.size()-1).start;
+						    		st.end = times;
+						    		st.max = secondDecibelAvg;
+						    		st.low = firstDecibelAvg;
+						    		st.chk = chkSnoringDb;
+						    		snoringTermList.remove(snoringTermList.size()-1);
+						    		grindingTermList.add(st);
 			    				}
 			    			}else {
 			    				//음파 진행 중이고, 소리가 발생하지 않았으나 아직 1초가 지나지 않았다. 
@@ -388,19 +328,10 @@ public class EventFireGui {
 				    	}
 				    	//소리가 발생하지 않았고, 음파가 진행 중인 상태가 아니다. 
 				    }
-			    	
-					//이갈이는 별도로 체크하자 기존 파형이 아닌 경우 0.2초 이하로 끊기기 떄문에 반복된 횟수가 2회라면 이갈이다.
-				    if(decibel > SleepCheck.getMinDB()) {
-						grindingRepeatOnceAmpCnt++;	
-				    }else {
-				    	grindingRepeatOnceAmpCnt = 0;
-				    }
-
 					// baos.write(frameBytes);
 
 				}
 
-				
 				System.out.println("코골이 시작");
 				for (StartEnd se : snoringTermList) {
 					System.out.print(se.getTerm());
@@ -459,38 +390,3 @@ public class EventFireGui {
 
 }
 
-class StartEnd {
-	double start;
-	double end;
-	List<AnalysisRawData> AnalysisRawDataList;
-	double max;
-	double low;
-	double chk;
-
-	public String getTerm() {
-		return 
-				String.format("%.2f", start) 
-				+ "~" + String.format("%.2f", end)
-				+ " max: " + String.format("%.2f", max)
-				+ " low: " + String.format("%.2f", low)
-				+ " chk: " + String.format("%.2f", chk);
-	}
-
-	public String getTermForRequest(int termCd, long recordStartingTIme) {
-		SimpleDateFormat dayTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		return "termTypeCd: " + termCd + ", termStartDt: "
-				+ dayTime.format(new Date((long) (recordStartingTIme + this.start * 1000))) + ",termEndDt: "
-				+ dayTime.format(new Date((long) (recordStartingTIme + this.end * 1000)));
-	}
-	
-	public String printAnalysisRawDataList() {
-		String rtn = "";
-		if(this.AnalysisRawDataList!=null) {
-			for(AnalysisRawData d : this.AnalysisRawDataList) {
-				rtn+=d.toString()+"\r\n";
-			}
-		}
-		return rtn;
-	}
-
-}
