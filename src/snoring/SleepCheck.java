@@ -47,7 +47,7 @@ public class SleepCheck {
 	static int EXCEPTION_DB_FOR_AVR_DB = -10;
 	static int AVR_DB_CHECK_TERM = 2000;
 	static double MAX_DB_CRIT_VALUE = -31.5;
-	static double MIN_DB_CRIT_VALUE = -30;
+	static double MIN_DB_CRIT_VALUE = -(31.5-(31.5*35/120)); //http://www.noiseinfo.or.kr/about/info.jsp?pageNo=942 조용한 공원(수면에 거의 영향 없음) 35, 40부터 낮아진다
 	static int NOISE_DB_INIT_VALUE = -10;
 	static int NOISE_DB_CHECK_TERM = 1*100*60;
 
@@ -244,7 +244,7 @@ public class SleepCheck {
 		System.out.println(decibel+" "+frequency);
 		return 0;
 	}
-	static int grindingCheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
+	static int grindingCheck(double times, double decibel, double frequency, double sefrequency) {
 		// 이갈이, 이갈이는 높은 주파수가 굉장히 짧은 간격으로 여러번 나타난다.
 		// 아래 1,2,3 무시, 다시-> 이갈이는 0.02~0.07초 사이의 큰 진폭을 갖는다. 즉, 0.01초 단위로 분석해서 연속으로 2~7회의
 		// 진폭이 발생하는 것을 잡으면 됨.
@@ -466,16 +466,35 @@ public class SleepCheck {
 							//System.out.println("기록vo종료");
 							isOSAAnsStart = false;
 							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
 						}else {
-							//System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
+							System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
 							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList.addAll(
 									EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList);
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList=EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList;
 							EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
 							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
 						}
 					}else { 
+						System.out.println("코골이기록vo 종료");
 						isOSAAnsStart = false;
-						EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
+						//if(EventFireGui.osaTermList.size()>0) {
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).end = times;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
+							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
+		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
+                        //}
 					}
 					
 					double tmpD = OSAcurTermTime;
@@ -503,20 +522,17 @@ public class SleepCheck {
 				//15초인 이유는 무호흡이 발생하는 데이터의 호흡시간이 15초 정도 발생하기 떄문이다.
 				//분석이 종료되는 시점은 앞에서 분석된 시간으로부터 1분이상 초과된 경우에 종료하고, 아닌 경우에는 현재 시간을 end.times에 추가한다.
 				//초기화를 한적이 있거나, 초기화하고 15초가 지났나?
-				if(!isOSATermTimeOccur || (isOSATermTimeOccur && times-OSAcurTermTime>15)) {
+				
+				//무호흡 발생했나?
+				if(!isOSATermTimeOccur) {
 					isOSAAnsStart = true;
 					OSAcurTermTime = times;
-					if(isOSATermTimeOccur && EventFireGui.osaTermList.size()>0) {
-						//System.out.println("이전기록vo취소");
-						EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
-					}
-					//System.out.println("기록vo생성");
+					System.out.println("기록vo생성");
 					EventFireGui.osaTermList.add(new StartEnd());
 					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=times;
 					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList = new ArrayList<AnalysisRawData>();
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList.add(new AnalysisRawData(times, amplitude, decibel, frequency, sefrequency, 0));
+					//EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList.add(new AnalysisRawData(times, amplitude, EventFireGui.tmpMaxDb, frequency, sefrequency, 0));
 					isOSATermTimeOccur = true;
-					//System.out.println(OSAcurTermTime);
 				}
 				
 				isBreathTermCnt++;

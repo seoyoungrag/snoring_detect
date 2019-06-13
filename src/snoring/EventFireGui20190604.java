@@ -367,7 +367,7 @@ public class EventFireGui20190604 {
 					}
 
 					// 이갈이는 기존 로직대로 체크해서, 어디 구간에서 발생했는지 체크한다.
-					SleepCheck.grindingCheck(times, decibel, sefamplitude, frequency, sefrequency);
+					//SleepCheck.grindingCheck(times, decibel, sefamplitude, frequency, sefrequency);
 					// 이갈이 신호가 발생하고, 이갈이 체크 상태가 아니면 이갈이 체크를 시작한다.
 					// System.out.println(grindingStart+" "+SleepCheck.curTermSecond + "
 					// "+SleepCheck.GrindingCheckStartTermSecond+"
@@ -489,7 +489,7 @@ public class EventFireGui20190604 {
 					}
 					
 					// 무호흡도 기존 로직대로 체크해서, 어디 구간에서 발생했는지 체크한다.
-					osaCnt = SleepCheck.OSACheck(times, decibel, sefamplitude, frequency, sefrequency);
+					//osaCnt = SleepCheck.OSACheck(times, decibel, sefamplitude, frequency, sefrequency);
 					osaRecordingContinueCnt += osaCnt;
 					// 무호흡 카운트가 발생하고, 체크 상태가 아니면 체크를 시작한다.
 					if (osaRecordingExit > 0) {

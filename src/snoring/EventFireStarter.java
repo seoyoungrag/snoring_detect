@@ -91,7 +91,6 @@ public class EventFireStarter {
 		fileList.add("raw/63103__robinhood76__00555-snoring-1-heavy-breath.wav");
 		fileList.add("raw/69329__robinhood76__00966-baby-snoring-2.wav");
 		fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
-		fileList.add("raw/What does Sleep Apnea sound like.wav");
 		//이갈이 파일들
 		//fileList = new ArrayList<String>();
 		fileList.add("raw/veryclearrepeating.wav");
@@ -103,7 +102,17 @@ public class EventFireStarter {
 		//fileList.add("raw/114609__daxter31__snoring.wav");
 		//fileList.add("raw/114609__daxter31__snoring-영역-016.wav");
 		//fileList.add("raw/veryclearrepeating-영역-017.wav");
-
+		//fileList = new ArrayList<String>();
+		//fileList.add("raw/s107FY1JHHyr.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/What does Sleep Apnea sound like.wav");
+		fileList = new ArrayList<String>();
+		fileList.add("raw/snoring-201906_12_2046_12_2047_1560340067330.wav");
+		fileList.add("raw/snoring-201906_12_2050_12_2051_1560340282024.wav");
+		fileList.add("raw/snoring-201906_12_2059_12_2100_1560340849079.wav");
+		fileList.add("raw/What does Sleep Apnea sound like.wav");
+		fileList.add("raw/Snoring vs Sleep Apnea  - What the difference sounds like.wav");
+		
 		for(String filePath : fileList) {
 			new EventFireGui(filePath);
 		}

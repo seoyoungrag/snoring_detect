@@ -305,8 +305,8 @@ public class EventFireGui20190607 {
 			    				if(soundStartAndSnroingCnt > 0) {
 			    					//코골이 카운트가 증가했었고, 코골이 기록vo에 종료 시간을 기록
 				    				snoringTermList.get(snoringTermList.size()-1).end = times;
-				    				snoringTermList.get(snoringTermList.size()-1).low = firstDecibelAvg;
-				    				snoringTermList.get(snoringTermList.size()-1).max = secondDecibelAvg;
+				    				snoringTermList.get(snoringTermList.size()-1).first = firstDecibelAvg;
+				    				snoringTermList.get(snoringTermList.size()-1).second = secondDecibelAvg;
 				    				snoringTermList.get(snoringTermList.size()-1).chk = chkSnoringDb;
 			    				}else {
 				    				//코골이 카운트가 증가한 적이 없었다. 
@@ -314,8 +314,8 @@ public class EventFireGui20190607 {
 						    		StartEnd st = new StartEnd();
 						    		st.start = snoringTermList.get(snoringTermList.size()-1).start;
 						    		st.end = times;
-						    		st.max = secondDecibelAvg;
-						    		st.low = firstDecibelAvg;
+						    		st.second = secondDecibelAvg;
+						    		st.first = firstDecibelAvg;
 						    		st.chk = chkSnoringDb;
 						    		snoringTermList.remove(snoringTermList.size()-1);
 						    		grindingTermList.add(st);
