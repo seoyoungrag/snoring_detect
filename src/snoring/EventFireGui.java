@@ -253,9 +253,9 @@ public class EventFireGui {
 						    }
 					    }
 					    );
-					    System.out.println(calcTime(times) + " " + hz + " " + db + " " + amp + " " + decibel + ", 100db: " + tmpMaxDb + "db, max: " + SleepCheck.getMaxDB() + ", min: " + SleepCheck.getMinDB() + " " + SleepCheck.noiseChkSum + " " + SleepCheck.noiseChkCnt);
+					    //System.out.println(calcTime(times) + " " + hz + " " + db + " " + amp + " " + decibel + ", 100db: " + tmpMaxDb + "db, max: " + SleepCheck.getMaxDB() + ", min: " + SleepCheck.getMinDB() + " " + SleepCheck.noiseChkSum + " " + SleepCheck.noiseChkCnt);
 					//코골이는 임계치를 보정해서 코골이의 음파 여부를 판단한다.
-				    if(decibel > chkSnoringDb) {
+				    if(decibel > chkSnoringDb && tmpMaxDb>40) {
 			            if(false) {
 						    DecimalFormat df = new DecimalFormat("0.00");
 						    //if(i==frameByteSizePer-1) { //분석 시작할 때 주파수 표시
@@ -543,6 +543,7 @@ public class EventFireGui {
 						//무호흡을 측정하기 위한 분석 시작 변수 초기화
 						//코골이가 발생하고 5초가 안지났어야 함.
 						if(snoringTermList.size() > 0 
+								&& snoringTermList.get(snoringTermList.size()-1).end != 0
 								&& times - snoringTermList.get(snoringTermList.size()-1).end > 0 
 								&& times - snoringTermList.get(snoringTermList.size()-1).end < 5 
 								&& !isOSATermTimeOccur) {
@@ -649,6 +650,7 @@ public class EventFireGui {
 							bse.chk += se.chk;
 							bse.AnalysisRawDataList.addAll(se.AnalysisRawDataList);
 							snoringTermList.remove(se);
+							s--;
 						}
 					}
 				}
@@ -674,6 +676,7 @@ public class EventFireGui {
 							bse.chk += se.chk;
 							bse.AnalysisRawDataList.addAll(se.AnalysisRawDataList);
 							grindingTermList.remove(se);
+							s--;
 						}
 					}
 				}
