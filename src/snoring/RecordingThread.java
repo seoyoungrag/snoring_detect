@@ -104,8 +104,6 @@ public class RecordingThread extends Thread {
 
 				// 소리 임계치로 소리의 발생 여부를 감지한다.
 				// 초기화 설정
-				SleepCheck.setMaxDB(decibel);
-				SleepCheck.setMinDB(decibel);
 
 				final String amp = String.valueOf(amplitude + "Amp");
 				final String db = String.valueOf(decibel + "db");
@@ -119,6 +117,11 @@ public class RecordingThread extends Thread {
 					continue;
 				}
 
+				SleepCheck.setMaxDB(decibel);
+				SleepCheck.setMinDB(decibel);
+	            tmpMinDb = SleepCheck.tmpMinDb;
+	            tmpMaxDb = SleepCheck.tmpMaxDb;
+	            
 				if (SleepCheck.noiseCheckForStart(decibel) >= 1 && isRecording == false
 						&& Math.floor((double) (audioData.length / (44100d * 16 * 1)) * 8) != Math.floor(times)) {
 					System.out.print(calcTime(times));
@@ -166,9 +169,7 @@ public class RecordingThread extends Thread {
 					continue;
 				}
 				if (allFHAndDB != null && tmpMaxDb > 40) {
-					System.out.println(calcTime(times) + " " + hz + " " + db + " " + amp + " " + decibel + ", 100db: "
-							+ tmpMaxDb + "db, max: " + SleepCheck.getMaxDB() + ", min: " + SleepCheck.getMinDB() + " "
-							+ SleepCheck.noiseChkSum + " " + SleepCheck.noiseChkCnt);
+					//System.out.println(calcTime(times) + " " + hz + " " + db + " " + amp + " " + decibel + ", 100db: " + tmpMaxDb + "db, max: " + SleepCheck.getMaxDB() + ", min: " + SleepCheck.getMinDB() + " " + SleepCheck.noiseChkSum + " " + SleepCheck.noiseChkCnt);
 				}
 				SleepCheck.snoringCheck(allFHAndDB, decibel, times, snoringTermList, grindingTermList, maxARD);
 				if (SleepCheck.CHECKED_STATUS == SleepCheck.CHECKED_ERROR) { // 발생하지 않을 것 같지만 아주 만약을 위해 0 리턴하는 방어코드를
@@ -178,12 +179,12 @@ public class RecordingThread extends Thread {
 																									// 한다.
 					allFHAndDB = null;
 				}
-				SleepCheck.osaCheck(decibel, times, osaTermList, snoringTermList);
+				SleepCheck.osaCheck(decibel, times, osaTermList, snoringTermList,noiseTermListForOsaList );
 				if (SleepCheck.CHECKED_STATUS == SleepCheck.CHECKED_ERROR) { // 발생하지 않을 것 같지만 아주 만약을 위해 0 리턴하는 방어코드를
 																				// 삽입하였다.
 					continue;
 				}
-				SleepCheck.someNoiseCheck(decibel, times, noiseTermListForOsaList);
+				SleepCheck.someNoiseCheck(times, amplitude, noiseTermListForOsaList);
 				if (SleepCheck.CHECKED_STATUS == SleepCheck.CHECKED_ERROR) { // 발생하지 않을 것 같지만 아주 만약을 위해 0 리턴하는 방어코드를
 																				// 삽입하였다.
 					continue;

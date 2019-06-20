@@ -115,8 +115,8 @@ public class SleepCheck {
     static int grindingRepeatOnceAmpCnt;
     static int continueCntInChkTermForGrinding;
     static int continueCntInChkTermForGrindingChange;
-    static double tmpMaxDb = 0;
-    static double tmpMinDb = 99999;
+    public static double tmpMaxDb = 0;
+    public static double tmpMinDb = 99999;
     static boolean soundStartInRecording = false;
     static double chkDBAgainInRecording = 0.0;
     static int soundStartAndSnroingCnt = 0;
@@ -173,6 +173,8 @@ public class SleepCheck {
             chkSnoringDb = getMinDB()/1.5;
         }
         if(allFHAndDB!=null) {
+            tmpMinDb = 99999;
+            tmpMaxDb = 0;
             //코골이는 임계치를 보정해서 코골이의 음파 여부를 판단한다.
             int maxDBL = allFHAndDB.length;
             maxDBL = maxDBL > 41 ? 41 : maxDBL;
@@ -341,7 +343,7 @@ public class SleepCheck {
         CHECKED_STATUS = CHECKED_COMPLETE;
         return CHECKED_COMPLETE;
     }
-    public static int osaCheck(double decibel, double times, List<StartEnd> osaTermList, List<StartEnd> snoringTermList){
+    public static int osaCheck(double decibel, double times, List<StartEnd> osaTermList, List<StartEnd> snoringTermList, List<StartEnd> noiseTermListForOsaList){
         double chkGrindingDb = getMinDB();
         if(chkGrindingDb<=-30) {
             chkGrindingDb = getMinDB()/1.5;
@@ -411,6 +413,23 @@ public class SleepCheck {
             osaTermList.remove(osaTermList.size()-1);
         }
 
+        //무호흡이 종료되지 않았고, 소음이 발생했다면 취소
+        if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end==0) {
+            if(noiseTermListForOsaList.size()>0){
+            	if(noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).start - osaTermList.get(osaTermList.size()-1).start > 0){
+                    osaTermList.remove(osaTermList.size()-1);
+            	}else {
+            		noiseTermListForOsaList.remove(noiseTermListForOsaList.size()-1);
+            	}
+            }else {
+            }
+            isOSATermTimeOccur = false;
+            isOSATermCnt = 0;
+            isBreathTerm = false;
+            isBreathTermCnt = 0;
+            OSAcurTermTime = 0.0;
+        }
+        
         //무호흡 종료 후 녹음된 시간이 너무 짧으면 삭제한다.
         if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end!=0 && times - osaTermList.get(osaTermList.size()-1).end < 5) {
             if(osaTermList.get(osaTermList.size()-1).end - osaTermList.get(osaTermList.size()-1).start < 5 ){
@@ -444,24 +463,11 @@ public class SleepCheck {
     static int someNoiseStartOppCnt = 0;
     static int someNoiseDbChkCnt = 0;
     
-    public static int someNoiseCheck(double decibel, double times, List<StartEnd> noiseTermListForOsaList){
-        //음파가 발생하는 구간,
-        //플래그로 음파가 발생하고 있는지를 관리한다.
-        //소리가 발생하고, 0.5초 간격으로 연속되고 있는지 체크한다.
-        //연속되지 않는 순간 음파가 끝난 것으로 간주한다.
-        double chkSnoringDb = getMinDB();
-        if(chkSnoringDb<=-30) {
-            chkSnoringDb = getMinDB()/2;
-        }else if(chkSnoringDb<=-20) {
-            chkSnoringDb = getMinDB()/1.75;
-        }else if(chkSnoringDb<=-10) {
-            chkSnoringDb = getMinDB()/1.5;
-        }
-        if(decibel > chkSnoringDb) {
+    public static int someNoiseCheck(double times, double amplitude, List<StartEnd> noiseTermListForOsaList){
             //음파가 발생했음.
             if(someNoiseStartInRecording==false) {
                 //TODO 음파 진행중일 떄의 평균 데시벨을 가지고, 음파로 인정할 소리를 한번더 구별 한다.
-                someNoiseChkDBAgainInRecording = decibel;
+                someNoiseChkDBAgainInRecording = amplitude;
                 //녹음 중에 소리가 발생했고 음파 시작은 아닌 상태, 음파 시작 상태로 변환
                 someNoiseStartInRecording = true;
                 //코골이 카운트를 초기화(음파 진행 중에 카운트 증가)
@@ -473,52 +479,38 @@ public class SleepCheck {
                 StartEnd st = new StartEnd();
                 st.start = times;
                 st.AnalysisRawDataList = new ArrayList<AnalysisRawData>();
-                //st.AnalysisRawDataList.add(maxARD);
                 noiseTermListForOsaList.add(st);
                 //음파가 진행되는 동안 최대 데시벨과 저주파수의 데시벨의 평균을 계산하기 위해 값을 초기화 한다.
                 //최대 데시벨 값과 저주파수 데시벨 값을 저장한다.(초기화)
                 someNoiseDbChkCnt = 0;
             }else {
-            	someNoiseChkDBAgainInRecording = (someNoiseChkDBAgainInRecording + decibel) /2;
-                if(firstDecibelAvg == 0 || secondDecibelAvg == 0) {
-                	someNoiseDbChkCnt = 0;
+            	someNoiseDbChkCnt++;
+                if(amplitude > someNoiseChkDBAgainInRecording*2) {
+                	someNoiseStartCnt++;
                 }else {
-                    if(Math.floor(decibel) >= Math.floor(someNoiseChkDBAgainInRecording) ) {
-                    	someNoiseDbChkCnt++;
-                    }
-                }
-            }
-        }else {
-            //소리가 발생하지 않았으면, 현재 코골이 음파 발생중인지 체크 한다.
-            if(someNoiseStartInRecording==true) {
-                if(noiseTermListForOsaList == null || noiseTermListForOsaList.size()==0){
-                	someNoiseStartInRecording = false;
-                    CHECKED_STATUS = CHECKED_ERROR;
-                    return CHECKED_ERROR;
-                }
-            	someNoiseStartCnt++;
-                //음파 진행 중이라면, 지금 체크중인 체크 시작시간이 1초를 넘었는지 체크한다.
-                if(times-noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).start>0.16*7){
-                    //음파시작시간과는 1초가 벌어졌다면 , 분석을 중단하고, 이후 코골이 발생 카운트를 체크하여 기록한다.
-                	someNoiseStartInRecording = false;
-                    if(someNoiseDbChkCnt > 0 ) {
-                        //코골이 카운트가 증가했었고, 코골이 기록vo에 종료 시간을 기록
-                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).end = times;
-                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).chk = someNoiseDbChkCnt;
-                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).positiveCnt = someNoiseStartCnt;
-                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).negitiveCnt = someNoiseStartOppCnt;
-                    }else {
-                    }
-                }else {
-                    //음파 진행 중이고, 소리가 발생하지 않았으나 아직 1초가 지나지 않았다.
-                    //진행 카운트 증가 안하고 통과
-                    //-> 진행된 카운트 대신 반대 카운트 증가
-                    //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
                 	someNoiseStartOppCnt++;
                 }
+                someNoiseChkDBAgainInRecording = amplitude;
             }
-            //소리가 발생하지 않았고, 음파가 진행 중인 상태가 아니다.
-        }
+            if(noiseTermListForOsaList == null || noiseTermListForOsaList.size()==0){
+            	someNoiseStartInRecording = false;
+                CHECKED_STATUS = CHECKED_ERROR;
+                return CHECKED_ERROR;
+            }
+        	if(times-noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).start>0.16*7){
+            	someNoiseStartInRecording = false;
+            	System.out.println(times+" "+amplitude+someNoiseDbChkCnt+" "+someNoiseStartCnt+" "+someNoiseStartOppCnt);
+	            if(someNoiseStartCnt>0){
+	                //코골이 카운트가 증가했었고, 코골이 기록vo에 종료 시간을 기록
+	            	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).end = times;
+	            	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).first = amplitude;
+	            	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).chk = someNoiseDbChkCnt;
+	            	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).positiveCnt = someNoiseStartCnt;
+	            	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).negitiveCnt = someNoiseStartOppCnt;
+	            }else {
+	            	noiseTermListForOsaList.remove(noiseTermListForOsaList.size()-1);
+	            }
+        	}
         CHECKED_STATUS = CHECKED_COMPLETE;
         return CHECKED_COMPLETE;
     }
