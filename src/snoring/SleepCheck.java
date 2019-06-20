@@ -1,607 +1,525 @@
 package snoring;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SleepCheck {
+    private static final String LOG_TAG3 = "SleepCheck";
 
-	static double curTermHz = 0.0;
-	static double curTermSecondHz = 0.0;
-	static double curTermTime = 0.0;
-	static double OSAcurTermTime = 0.0;
-	static double curTermDb = 0.0;
-	static int curTermAmp = 0;
-	static double grindChkDb = -10;
+    static double decibelSumCnt = 0;
 
-	static double chkOSADb = -9;
-	static boolean isBreathTerm = false;
-	static boolean isOSATerm = false;
-	static int isBreathTermCnt = 0;
-	static int isBreathTermCntOpp = 0;
-	static int isOSATermCnt = 0;
-	static int isOSATermCntOpp = 0;
-	static String beforeTermWord = "";
-	static String BREATH = "breath";
-	static String OSA = "osa";
+    static int AVR_DB_CHECK_TERM = 2000;
+    static double MAX_DB_CRIT_VALUE = -31.5;
+    static double MIN_DB_CRIT_VALUE = -(31.5-(31.5*35/120)); //http://www.noiseinfo.or.kr/about/info.jsp?pageNo=942 조용한 공원(수면에 거의 영향 없음) 35, 40부터 낮아진다
 
-	static int checkTerm = 0; // 1당 0.01초
-	static int grindingRepeatOnceAmpCnt = 0;
-	static int grindingRepeatAmpCnt = 0;
-	static int grindingContinueAmpCnt = 0;
-	static int grindingContinueAmpOppCnt = 0;
+    public static int noiseChkSum = 0;
+    static int noiseNoneChkSum = 0;
+    public static int noiseChkCnt = 0;
+    static int noiseChkForStartSum = 0;
+    static int noiseNoneChkForStartSum = 0;
+    static int noiseChkForStartCnt = 0;
 
-	static int snoringCheckCnt = 0;
-	static int snoringContinue = 0;
-	static int snoringContinueOpp = 0;
-	
-	static int checkTermSecond = 0;
-	static int curTermSecond = 0;
+    static double MAX_DB = -31.5;
+    static double MIN_DB = 0;
 
-	static int GRINDING_RECORDING_CONTINUE_CNT = 1;
-	
-	static double decibelSum = 0;
-	static double decibelSumCnt = 0;
-	
-	static int EXCEPTION_DB_FOR_AVR_DB = -10;
-	static int AVR_DB_CHECK_TERM = 2000;
-	static double MAX_DB_CRIT_VALUE = -31.5;
-	static double MIN_DB_CRIT_VALUE = -(31.5-(31.5*35/120)); //http://www.noiseinfo.or.kr/about/info.jsp?pageNo=942 조용한 공원(수면에 거의 영향 없음) 35, 40부터 낮아진다
-	static int NOISE_DB_INIT_VALUE = -10;
-	static int NOISE_DB_CHECK_TERM = 1*100*60;
+    public static double getMinDB() {
+        return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
+    }
 
-	static int noiseChkSum = 0;
-	static int noiseNoneChkSum = 0;
-	static int noiseChkCnt = 0;
-	static int noiseChkForStartSum = 0;
-	static int noiseNoneChkForStartSum = 0;
-	static int noiseChkForStartCnt = 0;
-	
-	static double GrindingCheckTermSecond = 0;
-	static double GrindingCheckStartTermSecond = 0;
-	static double GrindingCheckStartTermDecibel = 0;
-	static boolean GrindTermCheckBoolean = false;
-	
-	static double MAX_DB = -31.5;
-	static double MIN_DB = 0;
-	
-	static boolean isSnoringStart = false;
-	
-	static boolean isOSATermTimeOccur = false;
-	static boolean isOSAAnsStart = false;
-	/*
-	static double getAvrDB(double decibel) {
-		double avrDB = -AVR_DB_INIT_VALUE;
-		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
-			decibelSum = 0;
-			decibelSumCnt = 0;
-		}
-		if (decibel < EXCEPTION_DB_FOR_AVR_DB) {
-			decibelSum += decibel;
-			decibelSumCnt++;
-		}
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		return avrDB;
-	}
-*/
-	/*
-	static double getAvrDB() {
-		double avrDB = -AVR_DB_INIT_VALUE;
-		if (decibelSumCnt >= AVR_DB_CHECK_TERM || decibelSumCnt == 0) {
-			decibelSum = 0;
-			decibelSumCnt = 0;
-		}
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		return avrDB;
-	}
-	 */
+    public static double setMinDB(double decibel) {
+        //10분마다 평균 데시벨을 다시 계산한다.
+        if(Math.abs(decibel) != 0 && decibel < MIN_DB) {
+            MIN_DB = decibel;
+        }
+        return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
+    }
+    public static double getMaxDB() {
+        return MAX_DB*2 < MAX_DB_CRIT_VALUE ? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
+    }
 
-	static double getMinDB() {
-		/*
-		double avrDB = -AVR_DB_INIT_VALUE;
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
-		*/
-		return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
-	}
+    public static double setMaxDB(double decibel) {
+        //10분마다 평균 데시벨을 다시 계산한다.
+        if(Math.abs(decibel) != 0 && decibel > MAX_DB) {
+            MAX_DB = decibel-1;
+        }
+        if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
+            decibelSumCnt = 0;
+            MAX_DB = -31.5;
+            MIN_DB = 0;
+        }
+        decibelSumCnt ++;
+        return MAX_DB*2 < MAX_DB_CRIT_VALUE? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
+    }
+    public static int noiseCheck(double decibel) {
+        //1분동안 소리가 발생하지 않았는지 체크한다.
+        //0.01초 단위임으로, 6000번 해야 60초임.
+        //1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
+        if(noiseChkCnt>=6000) {
+            int tmpN = noiseChkSum;
+            noiseChkCnt = 0;
+            noiseChkSum = 0;
+            noiseNoneChkSum = 0;
+            return tmpN;
+        }else {
+            //아직 1분이 안되었으면 계속 소리 체크를 한다.
+            //소리 체크는 1분동안 평균 데시벨보다 최저 임계 데시벨의 소리가 발생했는지를 체크한다.
+            //리턴이 0이면 녹음 종료하게 되어있음.X
+            if(decibel >= getMinDB()) {
+                //noiseChkCnt++;
+                noiseChkSum++;
+            }else {
+                noiseNoneChkSum++;
+            }
+            noiseChkCnt++;
+            return 6001;
+            //return noiseChkCnt;
+        }
 
-	static double setMinDB(double decibel) {
-		//10분마다 평균 데시벨을 다시 계산한다.
-		if(Math.abs(decibel) != 0 && decibel < MIN_DB) {
-			MIN_DB = decibel;
-		}
-		/*
-		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
-			decibelSum = 0;
-			decibelSumCnt = 0;
-		}
-		double avrDB = -AVR_DB_INIT_VALUE;
-		decibelSum += decibel;
-		decibelSumCnt ++;
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		*/
-		return MIN_DB/2 > MIN_DB_CRIT_VALUE ? Math.floor(MIN_DB_CRIT_VALUE) : MIN_DB/2;
-	}
-	static double getMaxDB() {
-		/*
-		double avrDB = -AVR_DB_INIT_VALUE;
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		//System.out.print(decibelSum+" "+decibelSumCnt+" "+avrDB+" ");
-		*/
-		return MAX_DB*2 < MAX_DB_CRIT_VALUE ? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
-	}
+    }
 
-	static double setMaxDB(double decibel) {
-		//10분마다 평균 데시벨을 다시 계산한다.
-		if(Math.abs(decibel) != 0 && decibel > MAX_DB) {
-			MAX_DB = decibel-1;
-		}
-		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
-			decibelSumCnt = 0;
-			MAX_DB = -31.5;
-			MIN_DB = 0;
-		}
-		decibelSumCnt ++;
-		/*
-		if (decibelSumCnt >= AVR_DB_CHECK_TERM) {
-			decibelSum = 0;
-			decibelSumCnt = 0;
-		}
-		double avrDB = -AVR_DB_INIT_VALUE;
-		decibelSum += decibel;
-		decibelSumCnt ++;
-		if (decibelSum != 0 && decibelSumCnt != 0) {
-			avrDB = decibelSum / decibelSumCnt;
-		}
-		*/
-		return MAX_DB*2 < MAX_DB_CRIT_VALUE? Math.floor(MAX_DB_CRIT_VALUE) : MAX_DB*2;
-	}
-	static int noiseCheck(double decibel) {
-		//1분동안 소리가 발생하지 않았는지 체크한다.
-		//0.01초 단위임으로, 6000번 해야 60초임.
-		//1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
-		if(noiseChkCnt>=6000) {
-			int tmpN = noiseChkSum;
-			noiseChkCnt = 0;
-			noiseChkSum = 0;
-			noiseNoneChkSum = 0;
-			return tmpN;
-		}else {
-			//아직 1분이 안되었으면 계속 소리 체크를 한다.
-			//소리 체크는 1분동안 평균 데시벨보다 최저 임계 데시벨의 소리가 발생했는지를 체크한다.
-			//리턴이 0이면 녹음 종료하게 되어있음.X
-			if(decibel >= getMinDB()) {
-				//noiseChkCnt++;
-				noiseChkSum++;
-			}else {
-				noiseNoneChkSum++;
-			}
-			noiseChkCnt++;
-			return 6001;
-			//return noiseChkCnt;
-		}
-		
-	}
+    public static int noiseCheckForStart(double decibel) {
+        //1분동안 소리가 발생하지 않았는지 체크한다.
+        //0.01초 단위임으로, 6000번 해야 60초임.
+        //1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
+        if(noiseChkForStartCnt>=200) {
+            int tmpN = noiseChkForStartSum;
+            noiseChkForStartCnt = 0;
+            noiseChkForStartSum = 0;
+            noiseNoneChkForStartSum = 0;
+            return tmpN;
+        }else {
+            //아직 1분이 안되었으면 계속 소리 체크를 한다.
+            //소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
+            //리턴이 0이면 녹음 종료하게 되어있음.
+            if(decibel >= getMinDB()) {
+                //noiseChkCnt++;
+                noiseChkForStartSum++;
+            }else {
+                noiseNoneChkForStartSum++;
+            }
+            noiseChkForStartCnt++;
+            return -1;
+            //return noiseChkCnt;
+        }
+    }
 
-	static int noiseCheckForStart(double decibel) {
-		//1분동안 소리가 발생하지 않았는지 체크한다.
-		//0.01초 단위임으로, 6000번 해야 60초임.
-		//1분이 되었으면, 데시벨보다 높은 소리가 발생하지 않은 경우
-		if(noiseChkForStartCnt>=200) {
-			int tmpN = noiseChkForStartSum;
-			noiseChkForStartCnt = 0;
-			noiseChkForStartSum = 0;
-			noiseNoneChkForStartSum = 0;
-			return tmpN;
-		}else {
-			//아직 1분이 안되었으면 계속 소리 체크를 한다.
-			//소리 체크는 1분동안 평균 데시벨보다 높은 데시벨의 소리가 발생했는지를 체크한다.
-			//리턴이 0이면 녹음 종료하게 되어있음.
-			if(decibel >= getMinDB()) {
-				//noiseChkCnt++;
-				noiseChkForStartSum++;
-			}else {
-				noiseNoneChkForStartSum++;
-			}
-			noiseChkForStartCnt++;
-			return -1;
-			//return noiseChkCnt;
-		}
-		
-	}
-	static int snoringCheckNew(String times, double decibel, double frequency, double sefrequency, double[] allFHAndDB) {
-		
-		//allFhAndDB에 담긴 값과 decibel 값이 서로 다른 라이브러리를 쓰고 있어, 단위가 맞지 않는다.
-		//allFhAndDB의 범위는 알지 못하나 최대 81까지 최소는 -67 측정됨(, decibel ~31.5~0값임
-		//allFhAndDB의 범위가 더 크니까 allFhAndDB 보정해서 차이를 구한다.
-	    DecimalFormat df = new DecimalFormat("0.00");
-	    double d1 = -(31.5-allFHAndDB[0]/255*31.5);
-    	System.out.print(times+"\t");
-    	System.out.print(decibel+"\t");
-    	System.out.print(frequency+"\t");
-    	//System.out.print(df.format(d1)+"\t");
-    	//System.out.print(df.format(allFHAndDB[0])+"\t");
-    	System.out.println(df.format(Math.abs(decibel-d1)));
-    	if(Math.abs(decibel-d1)>Math.abs(decibel)/2){
-    		return 1;
-    	}else {
-    		return 0;
-    	}
-	}
+    public static double calcforChkSnoringDbNotNomarlize(double[] allFHAndDB, int startN, int endN) {
+        double forChkSnroingDb = 0;
+        for (int i = 0; i <= endN - startN; i++) {
+            forChkSnroingDb += allFHAndDB[startN+i];
+        }
+        forChkSnroingDb = Math.abs((forChkSnroingDb) / (endN - startN + 1));
+        return forChkSnroingDb;
+    }
 
-	static int snoringCheck(double decibel, double frequency, double sefrequency) {
-		System.out.println(decibel+" "+frequency);
-		return 0;
-	}
-	static int grindingCheck(double times, double decibel, double frequency, double sefrequency) {
-		// 이갈이, 이갈이는 높은 주파수가 굉장히 짧은 간격으로 여러번 나타난다.
-		// 아래 1,2,3 무시, 다시-> 이갈이는 0.02~0.07초 사이의 큰 진폭을 갖는다. 즉, 0.01초 단위로 분석해서 연속으로 2~7회의
-		// 진폭이 발생하는 것을 잡으면 됨.
-		// 이 때, 진폭의 수치는 의미가 없을 수 있으므로 먼저 반복횟수로만 잡아본다.
-		// 1. 특정 주파수보다 높은 주파수가 --> 특정주파수 a=?
-		// 2. 특정 시간동안 특정 횟수보다 많이 반복되는지 --> 특정시간 b=?, 특정횟수 c=?
-		// 3. 체크되면 이갈이다.
+    static int grindingRepeatOnceAmpCnt;
+    static int continueCntInChkTermForGrinding;
+    static int continueCntInChkTermForGrindingChange;
+    static double tmpMaxDb = 0;
+    static double tmpMinDb = 99999;
+    static boolean soundStartInRecording = false;
+    static double chkDBAgainInRecording = 0.0;
+    static int soundStartAndSnroingCnt = 0;
+    static int soundStartAndSnroingOppCnt = 0;
+    static double firstDecibelAvg = 0.0;
+    static double secondDecibelAvg = 0.0;
+    static double snoringDbChkCnt = 0;
+    static boolean isOSATermTimeOccur = false;
+    static int isOSATermCnt = 0;
+    static int isBreathTermCnt = 0;
+    static int osaContinueCnt = 0;
+    static boolean isBreathTerm = false;
+    static double OSAcurTermTime = 0.0;
 
-		// 특정 주파수대역에서 연속적으로 발생해야 한다.
-		// 분석하는 소리의 길이는 0.01초.
-		// 아래는 0.01초 데이터를 0.1초 단위로 분석X
+    public static int allFHAndDb_NEED_INITIALIZE = 2;
+    public static int CHECKED_COMPLETE = 1;
+    public static int CHECKED_ERROR = 0;
+    public static int CHECKED_STATUS = 0;
+    public static int snoringCheck(double[] allFHAndDB, double decibel, double times, List<StartEnd> snoringTermList, List<StartEnd> grindingTermList, AnalysisRawData maxARD){
+        //이갈이 음파가 매우 짧기 때문에, 코골이의 로직과 분리해야한다. 코골이는 0.16초 단위로 분석, 이갈이는 0.01초로 분석해야함
+        //코골이의 음파 길이 및 음파가 아닌 경우의 1초 범위까지 기록 하고 있음으로, 코골이가 아닌 경우에 이갈이인지 체크하도록 한다.
+        //이갈이는 1초 이내에 여러번 발생하며, 발생시에 0.02~0.03초의 연속된 짧고 높은 진폭이 발생한다.이 카운트가 1초에 5회 미만인 것만 뽑아낸다. //
+        //그렇다면 시간 대비 코골이 횟수를 비례해서 계산하면 된다.
+        double chkGrindingDb = getMinDB();
+        if(chkGrindingDb<=-30) {
+            chkGrindingDb = getMinDB()/1.5;
+        }else if(chkGrindingDb<=-20) {
+            chkGrindingDb = getMinDB()/1.25;
+        }else if(chkGrindingDb<=-10) {
+            chkGrindingDb = getMinDB()/1.1;
+        }
+        if(decibel > chkGrindingDb) {
+            grindingRepeatOnceAmpCnt++;
+        }else {
+            if( grindingRepeatOnceAmpCnt >= continueCntInChkTermForGrinding) {
+                continueCntInChkTermForGrinding += grindingRepeatOnceAmpCnt;
+                continueCntInChkTermForGrindingChange++;
+            }
+            grindingRepeatOnceAmpCnt = 0;
+        }
+        //음파가 발생하는 구간,
+        //음파가 발생하는 구간이란 코골이가 발생해서 코골이 1회의 시작과 끝을 의미한다.
+        //음파가 발생하는 구간동안 코골이가 발생했는지를 체크 해야 한다.
+        //플래그로 음파가 발생하고 있는지를 관리한다.
+        //소리가 발생하고, 0.5초 간격으로 연속되고 있는지 체크한다.
+        //연속되지 않는 순간 음파가 끝난 것으로 간주한다.
+        //음파가 끝나는 순간 코골이가 발생했는지 체크하고, 코골이가 발생하지 않은 것은 이갈이로 구분한다.
+        double chkSnoringDb = getMinDB();
+        if(chkSnoringDb<=-30) {
+            chkSnoringDb = getMinDB()/2;
+        }else if(chkSnoringDb<=-20) {
+            chkSnoringDb = getMinDB()/1.75;
+        }else if(chkSnoringDb<=-10) {
+            chkSnoringDb = getMinDB()/1.5;
+        }
+        if(allFHAndDB!=null) {
+            //코골이는 임계치를 보정해서 코골이의 음파 여부를 판단한다.
+            int maxDBL = allFHAndDB.length;
+            maxDBL = maxDBL > 41 ? 41 : maxDBL;
+            for(int m = 0 ; m < maxDBL ; m++){
+                if(allFHAndDB[m] > tmpMaxDb){
+                    tmpMaxDb = allFHAndDB[m];
+                    if(tmpMaxDb<0){
+                        tmpMaxDb = Math.abs(tmpMaxDb);
+                    }
+                }
+                if(allFHAndDB[m] < tmpMinDb){
+                    tmpMinDb = allFHAndDB[m];
+                }
+            }
+            if(decibel > chkSnoringDb && tmpMaxDb>40) {
+                //코골이 음파가 발생했음.
+                if(soundStartInRecording==false) {
+                    //코골이 분석 중 이갈이 구별 하기위한 카운트 초기화, 이갈이라면 이 카운트가 매우 높아선 안된다.
+                    continueCntInChkTermForGrinding = 0;
+                    continueCntInChkTermForGrindingChange = 0;
+                    //TODO 음파 진행중일 떄의 평균 데시벨을 가지고, 음파로 인정할 소리를 한번더 구별 한다.
+                    chkDBAgainInRecording = decibel;
+                    //녹음 중에 소리가 발생했고 음파 시작은 아닌 상태, 음파 시작 상태로 변환
+                    soundStartInRecording = true;
+                    //코골이 카운트를 초기화(음파 진행 중에 카운트 증가)
+                    soundStartAndSnroingCnt = 0;
+                    //낮은 주파수 평균이 데시벨의 절반보다 낮다면 코골이 카운트 증가
+                    //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
+                    soundStartAndSnroingOppCnt = 0;
+                    //음파시작시간을 보관하기 위해 기록vo를 생성
+                    StartEnd st = new StartEnd();
+                    st.start = times;
+                    st.AnalysisRawDataList = new ArrayList<AnalysisRawData>();
+                    //st.AnalysisRawDataList.add(maxARD);
+                    snoringTermList.add(st);
+                    //음파가 진행되는 동안 최대 데시벨과 저주파수의 데시벨의 평균을 계산하기 위해 값을 초기화 한다.
+                    //최대 데시벨 값과 저주파수 데시벨 값을 저장한다.(초기화)
+                    firstDecibelAvg = 0;
+                    secondDecibelAvg = 0;
+                    snoringDbChkCnt = 0;
+                }else {
+                    chkDBAgainInRecording = (chkDBAgainInRecording + decibel) /2;
+                    if(firstDecibelAvg == 0 || secondDecibelAvg == 0) {
+                        firstDecibelAvg = calcforChkSnoringDbNotNomarlize(allFHAndDB, 2, 40);
+                        secondDecibelAvg = calcforChkSnoringDbNotNomarlize(allFHAndDB, 10, 18);
+                        snoringDbChkCnt = 0;
+                    }else {
+                        if(Math.floor(decibel) >= Math.floor(chkDBAgainInRecording) &&
+                                calcforChkSnoringDbNotNomarlize(allFHAndDB, 10, 18)>calcforChkSnoringDbNotNomarlize(allFHAndDB, 2, 40)) {
+                            //평균으로만 비교하긴 할건데, 평균낼때까지 얼마나 차이가 있었나도 비교해봄.. 값을 쓸 수도 있다.
+                            snoringDbChkCnt++;
+                        }
+                        firstDecibelAvg = (firstDecibelAvg+calcforChkSnoringDbNotNomarlize(allFHAndDB, 2, 40))/2;
+                        secondDecibelAvg = (secondDecibelAvg+calcforChkSnoringDbNotNomarlize(allFHAndDB, 10, 18))/2;
+                    }
+                }
+            }else {
+                //소리가 발생하지 않았으면, 현재 코골이 음파 발생중인지 체크 한다.
+                if(soundStartInRecording==true) {
+                    if(snoringTermList == null || snoringTermList.size()==0){
+                        soundStartInRecording = false;
+                        CHECKED_STATUS = CHECKED_ERROR;
+                        return CHECKED_ERROR;
+                    }
+                    //음파 진행 중이라면, 지금 체크중인 체크 시작시간이 1초를 넘었는지 체크한다.
+                    if(times-snoringTermList.get(snoringTermList.size()-1).start>0.16*7){
+                        //음파시작시간과는 1초가 벌어졌다면 , 분석을 중단하고, 이후 코골이 발생 카운트를 체크하여 기록한다.
+                        soundStartInRecording = false;
+                        //두번째 데시벨이 더 크게 나타난다.
+                        double  diffMaxToLow = Math.abs(secondDecibelAvg) - Math.abs(firstDecibelAvg);
+                        //차이가 맥시멈 데시벨의 절반 이상인가
+                        if(diffMaxToLow > 0 ) {
+                            //1초가 벌어졌다면, 음파 진행된 동안의 최대 데시벨 평균과 평균 데시벨의 차이를 비교한다.
+                            //낮은 주파수 평균이 데시벨의 절반보다 낮다면 코골이 카운트 증가
+                            //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
+                            soundStartAndSnroingCnt++;
+                        }else {
+                            //진행 카운트 증가 안하고 통과
+                            //-> 진행된 카운트 대신 반대 카운트 증가
+                            soundStartAndSnroingOppCnt++;
+                        }
+                        //1. 5~200 주파수의 평균 데시벨보다 43~80 주파수의 평균 데시벨이 더 커야함
+                        //2. 코골이 긍장 카운트 1 당, 부정카운트가 3보다 크면 안된다.(
+                        if(soundStartAndSnroingCnt > 0 && soundStartAndSnroingOppCnt<soundStartAndSnroingCnt*3) {
+                            //코골이 카운트가 증가했었고, 코골이 기록vo에 종료 시간을 기록
+                            snoringTermList.get(snoringTermList.size()-1).end = times;
+                            snoringTermList.get(snoringTermList.size()-1).first = firstDecibelAvg;
+                            snoringTermList.get(snoringTermList.size()-1).second = secondDecibelAvg;
+                            snoringTermList.get(snoringTermList.size()-1).chk = snoringDbChkCnt;
+                            snoringTermList.get(snoringTermList.size()-1).positiveCnt = soundStartAndSnroingCnt;
+                            snoringTermList.get(snoringTermList.size()-1).negitiveCnt = soundStartAndSnroingOppCnt;
+                            if(snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList!=null &&
+                                    snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList.size() >0){
+                                double tmpTimes1 = snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList.get(
+                                        snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList.size()-1
+                                ).getTimes();
+                                tmpTimes1 = Math.floor(tmpTimes1);
+                                double currentTimes1 = Math.floor(times);
+                                if(currentTimes1-1 == tmpTimes1){
+                                    snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList.add(maxARD);
+                                }else if(currentTimes1-2 == tmpTimes1){
+                                    AnalysisRawData tmpD = new AnalysisRawData(currentTimes1-1, maxARD.getAmplitude(), tmpMaxDb, maxARD.getFrequency());
+                                    snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList.add(tmpD);
+                                }
+                            }
+                        }else {
+                            //코골이 카운트가 증가한 적이 없었다.
+                            //코골이 기록 vo 대신 이갈이 기록 vo로 넣는다.
+                            //이갈이는 원본 로직대로 한다.
+                            if(continueCntInChkTermForGrindingChange > 0 && continueCntInChkTermForGrinding> 0 &&
+                                    firstDecibelAvg > tmpMaxDb/2 &&
+                                    Math.abs(firstDecibelAvg - secondDecibelAvg)<5 &&
+                                    //grindingChange가 3이상일 때는, / 가 10보다 크고 12보다 작아야함
+                                    ((continueCntInChkTermForGrindingChange >= 3 && continueCntInChkTermForGrinding/continueCntInChkTermForGrindingChange >= 10 && continueCntInChkTermForGrinding/continueCntInChkTermForGrindingChange <= 12)
+                                            ||
+                                            //2이하일 때는, / 가 9보다 작아야함
+                                            (continueCntInChkTermForGrindingChange <=2 && continueCntInChkTermForGrinding/continueCntInChkTermForGrindingChange >= 6 && continueCntInChkTermForGrinding/continueCntInChkTermForGrindingChange <= 9)
+                                    )) {
+                                StartEnd st = new StartEnd();
+                                st.start = snoringTermList.get(snoringTermList.size()-1).start;
+                                st.AnalysisRawDataList = snoringTermList.get(snoringTermList.size()-1).AnalysisRawDataList;
+                                st.end = times;
+                                st.second = secondDecibelAvg;
+                                st.first = firstDecibelAvg;
+                                st.chk = secondDecibelAvg-firstDecibelAvg;
+                                st.positiveCnt = continueCntInChkTermForGrinding;
+                                st.negitiveCnt = continueCntInChkTermForGrindingChange;
+                                if(st.AnalysisRawDataList!=null &&
+                                        st.AnalysisRawDataList.size() >0){
+                                    double tmpTimes1 = st.AnalysisRawDataList.get(st.AnalysisRawDataList.size()-1).getTimes();
+                                    tmpTimes1 = Math.floor(tmpTimes1);
+                                    double currentTimes1 = Math.floor(times);
+                                    if(currentTimes1-1 == tmpTimes1){
+                                        st.AnalysisRawDataList.add(maxARD);
+                                    }else if(currentTimes1-2 == tmpTimes1){
+                                        AnalysisRawData tmpD = new AnalysisRawData(currentTimes1-1, maxARD.getAmplitude(), tmpMaxDb, maxARD.getFrequency());
+                                        st.AnalysisRawDataList.add(tmpD);
+                                    }
+                                }
+                                snoringTermList.remove(snoringTermList.size()-1);
+                                grindingTermList.add(st);
+                            }else {
+                                snoringTermList.remove(snoringTermList.size()-1);
+                            }
+                        }
+                    }else {
+                        //음파 진행 중이고, 소리가 발생하지 않았으나 아직 1초가 지나지 않았다.
+                        //진행 카운트 증가 안하고 통과
+                        //-> 진행된 카운트 대신 반대 카운트 증가
+                        //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
+                        soundStartAndSnroingOppCnt++;
+                        //snoringTermList.remove(snoringTermList.size()-1);
+                        //soundStartInRecording = false;
+                    }
+                }
+                //소리가 발생하지 않았고, 음파가 진행 중인 상태가 아니다.
 
-		// 소리가 평균 크기보다 클 때 분석한다.
-		// -> 이갈이는 소리 폭이 너무 커서 평균 측정 소리 때문에 측정이 안될 수 도 있다.-> 평균 소리보다 2배 이상 진폭이 크면 평균치에
-		// 합산 안함.
-		// if(amplitude > (maxAmp/sumCnt)) {
-		// if(amplitude > 1000) {
-		// 계속 발생되는 주파수의 0.1초간격으로 비교하여 비슷한 주파수 일때(+-50)가 연속되는 경우에 카운팅 한다.X
-		// 연속으로 높게 발생되는 진폭이 0.01초 단위로 2~7회 연속되는지 체크
+                // baos.write(frameBytes);
 
-		// System.out.println(times+" - "+termTime+" =
-		// "+String.valueOf(times-termTime));
-		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond);
-		// 데시벨이 더 높고 주파수대역이 100의 자리에서 내림했을 때 동일하며, 0.02초 동안만 반복되어야 한다.(1번 반복)X
-		//System.out.println("grindingChkDb:" +decibel +"vs" + getMinDB()*1.1+" ");
-		if (decibel > getMinDB()*0.55
-		// curTermDb >= decibel && // 비교기준이 되는 데시벨은 고점이어야 한다.X -> 고점에서 점차 데시벨이 내려오는것은 다른
-		// 사운드와 동일한 특징이다. 비슷한 대역의 소리가 계속 발생하는것을 찾아야한다.
-				/*&& (
-		Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 1 // 데시벨 오차 범위가 1db 이면 같은 이어지는 소리로 판단한다.
-		//주파수가 같아야함.
-		&& (
-				// 100보다 큰 경우 십의 자리 까지 버리고 비교한다.
-				(frequency > 100 && curTermHz > 100 && (int)curTermHz / 100 != (int)frequency / 100 ) 
-				||
-				// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
-				(frequency < 10 && curTermHz < 10 && (int)curTermHz / 10 != (int)frequency / 10 )
-				||
-				// 100보다 큰 경우 십의 자리 까지 버리고 비교한다.
-				(sefrequency > 100 && curTermSecondHz > 100 && (int)curTermSecondHz / 100 != (int)sefrequency / 100 ) 
-				||
-				// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
-				(sefrequency < 10 && curTermSecondHz < 10 && (int)curTermSecondHz / 10 != (int)sefrequency / 10 )
-				
-				)
-				)
-				*/
-				){
-			//0.01초 단위로 연속으로 반복하는 여부 카운트 증가
-			//매우 짧은 간격 으로 높은 데시벨이 연속 된다고 하고, 이 간격은 0.02초이며, 0.02초가 지나면, 체크중인 이갈이 평균 데시벨로 부터 2데시벨이 차이나면, 반대 카운트를 증가한다. 
-			if(grindingRepeatOnceAmpCnt==0) {
-				GrindingCheckStartTermDecibel = decibel;
-			}else {
-				GrindingCheckStartTermDecibel = (GrindingCheckStartTermDecibel+decibel) / grindingRepeatOnceAmpCnt;
-			}
-			if(grindingRepeatOnceAmpCnt>=2) {
-				if(decibel > grindingRepeatOnceAmpCnt) {
-					grindingContinueAmpOppCnt++;	
-				}else {
-					grindingRepeatOnceAmpCnt++;
-				}
-			}else {
-				grindingRepeatOnceAmpCnt++;
-			}
-			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
-			
-			/*
-			System.out.println("==========GRIND CHECK STA==============");
-			System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " );
-			System.out.println( curTermDb + " " + Math.abs(decibel));
+            }
+            //allFHAndDB = null;
+            CHECKED_STATUS = allFHAndDb_NEED_INITIALIZE;
+            return allFHAndDb_NEED_INITIALIZE;
+        }else {
+        }
+        CHECKED_STATUS = CHECKED_COMPLETE;
+        return CHECKED_COMPLETE;
+    }
+    public static int osaCheck(double decibel, double times, List<StartEnd> osaTermList, List<StartEnd> snoringTermList){
+        double chkGrindingDb = getMinDB();
+        if(chkGrindingDb<=-30) {
+            chkGrindingDb = getMinDB()/1.5;
+        }else if(chkGrindingDb<=-20) {
+            chkGrindingDb = getMinDB()/1.25;
+        }else if(chkGrindingDb<=-10) {
+            chkGrindingDb = getMinDB()/1.1;
+        }
+        if(decibel > chkGrindingDb) {
+            //소리가 발생했고, 분석 시작 변수 값이 true 인 경우 종료한다.
+            if(isOSATermTimeOccur) {
+                //0.1초 동안 소리가 70% 이상 발생한 경우 소리가 발생한 것으로 본다.
 
-			System.out.println( (int)curTermHz / 100+ " " + (int)frequency / 100);
-			System.out.println( (int)curTermHz%100 / 10+ " " + (int)frequency%100 / 10);
-			System.out.println((frequency > 100 && curTermHz > 100 && (int)curTermHz / 100 != (int)frequency / 100 ) 
-					||
-					// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
-					(frequency < 10 && curTermHz < 10 && (int)curTermHz / 10 != (int)frequency / 10 ));
-			System.out.println( (int)curTermSecondHz / 100+ " " + (int)sefrequency / 100);
-			System.out.println( (int)curTermSecondHz%100 / 10+ " " + (int)sefrequency%100 / 10);
-			System.out.println((sefrequency > 100 && curTermSecondHz > 100 && (int)curTermSecondHz / 100 != (int)sefrequency / 100 ) 
-					||
-					// 100보다 작은 경우 십의 자리 까지 버리고 비교한다.
-					(sefrequency < 10 && curTermSecondHz < 10 && (int)curTermSecondHz / 10 != (int)sefrequency / 10 ));
-			System.out.println( (int)curTermAmp / 100+ " " + (int)amplitude / 100);
-			System.out.println( (int)curTermAmp%100 / 10+ " " + (int)amplitude%100 / 10);
-			System.out.println("==========GRIND CHECK END==============");
-			*/
-		} else {
-			//신호가 바뀔 때 신호가 반복된 카운트가 1인 경우에만 유효카운트를 증가한다.
-			//System.out.println(String.format("%.2f", times) + "s " + grindingRepeatOnceAmpCnt);
-			//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
-			if (grindingRepeatOnceAmpCnt <= 4 && grindingRepeatOnceAmpCnt>=2) {
-				if(grindingContinueAmpCnt == 0) {
-					GrindingCheckStartTermSecond = times;
-				}
-				grindingContinueAmpCnt++;
-				//System.out.println(String.format("%.2f", times) + "s " + frequency + " " + decibel + " " + amplitude + " " + sefrequency + " " +grindingContinueAmpCnt);
-			}
-			grindingContinueAmpOppCnt++;	
-			grindingRepeatOnceAmpCnt = 0;
-		}
+                if(isOSATermCnt+isBreathTermCnt>90 && isOSATermCnt > 20 && isBreathTermCnt > 70) {
+                    //오차범위를 둔다. 0.5초 동안 연속으로 소리가 발생해야 한다.
+                    if(osaContinueCnt > 4) {
+                        isOSATermTimeOccur = false;
+                        isBreathTermCnt = 0;
+                        isBreathTerm = true;
+                        if(osaTermList!=null&&osaTermList.size()>0) {
+                            osaTermList.get(osaTermList.size() - 1).end = times;
+                            osaTermList.get(osaTermList.size() - 1).chk = 0;
+                        }else{
+                        	System.out.println("osaTermList!=null && osaTermList.size()>0, line 252");
+                        }
+                        osaContinueCnt = 0;
+                    }else {
+                        if(osaContinueCnt!=0) {
+                            osaContinueCnt ++;
+                        }else {
+                            osaContinueCnt = 1;
+                        }
+                    }
+                }
+            }else {
 
-		// 1. 진폭, 데시벨, 주파수를 이용해서 0.01초 단위로 1번만 발생하거나 2번 연속발생한 포먼트를 측정하고,
-		// 2. 위 포먼트가 1초동안 얼만큼 발생했는지를 카운트를 체크, 기준치는 3으로 잡았다.
-		// 3. 3번 이상 연속발생한 포먼트의 카운트를 체크, 기준치는 69로 잡았다.
-		// -> 즉 1번의 포먼트가 1초동안 3번 발생했는지 체크, 동시에 3회이상연속한 포먼트 카운트가 69를 넘어야함. 이 현상이 수초(2초)
-		// 동안 발생해야 함
-		// 연속 카운트
-		//System.out.println(String.format("%.3f", times)+" "+checkTermSecond+" "+curTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
+            }
+            isBreathTermCnt++;
+        }else {
+            //무호흡을 측정하기 위한 분석 시작 변수 초기화
+            //코골이가 발생하고 5초가 안지났어야 함.
+            if(snoringTermList.size() > 0
+                    && snoringTermList.get(snoringTermList.size()-1).end != 0
+                    && times - snoringTermList.get(snoringTermList.size()-1).end > 0
+                    && times - snoringTermList.get(snoringTermList.size()-1).end < 5
+                    && !isOSATermTimeOccur) {
+                //0.1초 동안 묵음이 70% 이상 발생한 경우 소리가 발생한 것으로 본다.
+                if(isOSATermCnt+isBreathTermCnt>90 && isBreathTermCnt > 70 && isBreathTermCnt > 20) {
+                    osaContinueCnt = 0;
+                    OSAcurTermTime = times;
+                    isOSATermTimeOccur = true;
+                    isBreathTerm = false;
+                    osaTermList.add(new StartEnd());
+                    osaTermList.get(osaTermList.size()-1).start=times;
+                    osaTermList.get(osaTermList.size() - 1).AnalysisRawDataList = new ArrayList<AnalysisRawData>();
+                }
+            }
+            isOSATermCnt++;
+        }
+        //무호흡 발생후 3분동안 종료되지 않는다면 취소
+        if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end==0 && times-osaTermList.get(osaTermList.size()-1).start > 180) {
+            isOSATermTimeOccur = false;
+            isOSATermCnt = 0;
+            isBreathTerm = false;
+            isBreathTermCnt = 0;
+            OSAcurTermTime = 0.0;
+            osaTermList.remove(osaTermList.size()-1);
+        }
 
-		//if (checkTerm % 100 == 0) { //분석단위가 0.11, 0.12초라 100이라는 수치는 오차가 발생한다.
-		//초를 계산해서 처리하도록 함.
-		//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
-		if (Math.floor((GrindingCheckTermSecond - GrindingCheckStartTermSecond)*100) == 101) {
-			//System.out.println(curTermSecond + "~"+checkTermSecond+"s, grindingContinueAmpCnt:"+grindingContinueAmpCnt+", grindingContinueAmpOppCnt:"+grindingContinueAmpOppCnt+", grindingRepeatAmpCnt:"+grindingRepeatAmpCnt);
-			if(grindingContinueAmpCnt >= 3
-					&& grindingContinueAmpCnt <=15 
-					&& grindingContinueAmpOppCnt >= 50
-					) {
-				grindingRepeatAmpCnt++;
-				//System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt+" "+grindingRepeatAmpCnt);
-			}else {
-				grindingRepeatAmpCnt = 0;
-				//System.out.println("여기8");
-			}
-			grindingContinueAmpCnt = 0;
-			grindingContinueAmpOppCnt = 0;
-		}
+        //무호흡 종료 후 녹음된 시간이 너무 짧으면 삭제한다.
+        if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end!=0 && times - osaTermList.get(osaTermList.size()-1).end < 5) {
+            if(osaTermList.get(osaTermList.size()-1).end - osaTermList.get(osaTermList.size()-1).start < 5 ){
+                osaTermList.remove(osaTermList.size()-1);
+            }
+        }
 
-		//무조건 반환하고, 2~3초 이상 지속되는지는 여기서 판단하지 않는다.
-		/*
-		if(grindingRepeatAmpCnt>=2) {
-			System.out.println(curTermSecond + " "+checkTermSecond+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt+" "+grindingRepeatAmpCnt);
-			grindingRepeatAmpCnt = 0;
-			//grindingContinueAmpCnt=0;
-			//grindingContinueAmpOppCnt = 0;
-			return 1;
-		}
-		*/
-
-		//1초 단위로 유효카운트가 몇회인지 체크한다. 유효카운트가 범위에 해당하면, 몇초동안 지속되는지 체크한다.
-		/*
-		if (checkTerm % 100 == 0) {
-			if (//checkTerm % 100 == 0 &&
-					grindingRepeatAmpCnt >= 2 
-					//&& grindingContinueAmpCnt >= 1 && grindingContinueAmpCnt <=5 && grindingContinueAmpOppCnt >= 60
-					) {
-				int tmpI = grindingRepeatAmpCnt;
-				grindingRepeatAmpCnt=0;
-				grindingRepeatOnceAmpCnt = 0;
-				grindingContinueAmpCnt = 0;
-				grindingContinueAmpOppCnt = 0;
-				return tmpI;
-			}
-			grindingContinueAmpCnt = 0;
-			grindingContinueAmpOppCnt = 0;
-		}else {
-			//System.out.println(String.format("%.2f", times) + "s "+checkTerm % 100+" "+grindingRepeatAmpCnt+" "+grindingContinueAmpCnt+" "+grindingContinueAmpOppCnt);
-			if(grindingContinueAmpCnt >= 1 
-					&& grindingContinueAmpCnt <=6 
-					&& grindingContinueAmpOppCnt >= 70) {
-				
-				grindingRepeatAmpCnt++;
-				grindingContinueAmpCnt = 0;
-				grindingContinueAmpOppCnt = 0;
-			}
-		}
-		*/
-		return 0;
-	}
-
-	/*
-	 * 무호흡증은 항상 코골이를 동반하며, 코골이의 시작하고 종료한 시간은 5~10초이내 숨을 쉬어야 하기 때문에 호흡이 가파른 느낌이 있다,
-	 * 무호흡 코골이 시간이 종료한 후 숨을 멈추는 시간이 30~50초 이내이다. 1.db세기로 무호흡코골이 및 호흡으로 측정되는 부분을
-	 * 특정한다. 2. 호흡은 0.7초 간격은 0.2초 3. 2번이 유지되면 무호흡코골이 혹은 호흡하는 구간이다. 4. 3번을 유지하지 않는경우
-	 * 일정 db이하로 30~50초 동안 유지되는지를 체크함으로써 무호흡 구간인지 특정한다.
-	 */
-	static int OSACheck(double times, double decibel, int amplitude, double frequency, double sefrequency) {
-		// 2. 기준 데시벨보다 높은 소리라면 호흡(혹은 코골이) 구간인지 체크한다.
-		//System.out.println("OSACheckDb:" +decibel +"vs" + getMinDB());
-		if (decibel > getMinDB()*0.45) {
-			// 2-1. 데시벨을 이용해서 연속된 소리인지 체크한다.
-			// 2-1-1. 연속된 소리인지 체크하기 위해서는 비슷한 데시벨인지만 체크한다.
-			// (주파수나 진폭은 0.01초 단위로 상이하기 때문에 팩터로 이용할 수 없음.)
-			// 2-1-2. 비슷한 데시벨은 기준 정보의 데시벨에서 +-1db로 하며, 체크될 경우 숨쉬는 구간 카운트를 1씩 증가한다.
-			// 체크가 안되면 숨쉬기 아님 카운트를 1씩 증가한다. 숨쉬기구간은 true 된다.
-			/*
-			 * if (Math.abs(Math.abs(curTermDb) - Math.abs(decibel)) < 1 // 데시벨 오차 범위가
-			 * 1db인지만 체크 ) { isBreathTermCnt++; isBreathTerm = true; // 2-1-2-1. 숨쉬기 구간이
-			 * true가 될 때, 무호흡 구간이 true인 경우, 무호흡 구간을 false로 바꾸며, // 이때 기준 정보의 시간은 무호흡 시작시간,
-			 * 종료시간은 무호흡 종료시간이 된다. // 무호흡 구간 카운트 로깅을 하고 무호흡 구간 카운트를 초기화 한다. if(isOSATerm ==
-			 * true) { System.out.println("["+String.format("%.2f", curTermTime) +
-			 * "~"+String.format("%.2f", times) + "s, isOSATermCnt: " +
-			 * isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]"); curTermTime = times;
-			 * isOSATerm = false; isOSATermCnt = 0; } } else { isBreathTermCntOpp++; }
-			 */
-
-			if (isOSATerm == true) {
-				// 무호흡에서 호흡으로 넘어오는 경우 오차범위가 5초는 넘어야 무호흡구간으로 본다.
-				if (beforeTermWord.equals(BREATH) && isOSATermCnt > 1000) {
-					isOSATermTimeOccur=false;
-					/*
-					 * if(beforeTermWord.equals(OSA)) { System.out.println("["+String.format("%.2f",
-					 * curTermTime) + "~"+String.format("%.2f", times) + "s, isOSATermCnt: " +
-					 * isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]"); }else {
-					 * System.out.println("["+String.format("%.2f", curTermTime) +
-					 * "~"+String.format("%.2f", times) + "s, isOSATermCnt: " +
-					 * isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]"); curTermTime = times;
-					 * }
-					 */
-					System.out.println("![" + String.format("%.2f", OSAcurTermTime) + "~" + String.format("%.2f", times)
-							+ "s, isOSATermCnt: " + isOSATermCnt + ", isOSATermCntOpp:" + isOSATermCntOpp + "]");
-					//분석이 종료되는 시점은 앞에서 분석된 시간으로부터 1분이상 초과된 경우에 종료하고, 아닌 경우에는 현재 시간을 end.times에 추가한다.
-					if(EventFireGui.osaTermList.size()>1) {
-						int beforeEndTime = (int) EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).end; //0이거나 값이 있거나
-						int currentTime = (int) times;
-						System.out.println(beforeEndTime +" "+ currentTime+"="+(currentTime-beforeEndTime));
-						if(currentTime - beforeEndTime > 60) { 
-							//System.out.println("기록vo종료");
-							isOSAAnsStart = false;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
-						}else {
-							System.out.println("1분이 안 지났으므로, 기록vo종료하지 않고, 이전기록vo에 종료입력, 현재 기록vo 삭제");
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList.addAll(
-									EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList);
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).AnalysisRawDataList=EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-2).AnalysisRawDataList;
-							EventFireGui.osaTermList.remove(EventFireGui.osaTermList.size()-1);
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).end=times;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
-						}
-					}else { 
-						System.out.println("코골이기록vo 종료");
-						isOSAAnsStart = false;
-						//if(EventFireGui.osaTermList.size()>0) {
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).end = times;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).first = EventFireGui.firstDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).second = EventFireGui.secondDecibelAvg;
-							EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).chk = EventFireGui.snoringDbChkCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).positiveCnt = isOSATermCnt;
-		    				EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).negitiveCnt = isOSATermCntOpp;
-                        //}
-					}
-					
-					double tmpD = OSAcurTermTime;
-					OSAcurTermTime = times;
-					isOSATerm = false;
-					isOSATermCnt = 0;
-					isOSATermCntOpp = 0;
-					// beforeTermWord=OSA;
-					return (int) (times-tmpD);
-				} else {
-					/*
-					System.out.println("[ignore term, "+String.format("%.2f", curTermTime) +
-					 "~"+String.format("%.2f", times) + "s, isOSATermCnt: " + isOSATermCnt+", isOSATermCntOpp:"+isOSATermCntOpp+"]");
-					*/
-					//curTermTime = times;
-					isOSATerm = false;
-					isOSATermCnt = 0;
-					isOSATermCntOpp = 0;
-					// beforeTermWord=OSA;
-				}
-			} else {
-				//현재 데시벨이 기준 데시벨보다 크고, 무호흡 구간이 아닌 경우이다. 여기서 초기화를 해야한다.
-				//문제는 무호흡 구간이 아닌 경우 0.01초 단위로 계속 이곳을 타기 때문에, 한번만 초기화할 수 있어야 한다. 한번 초기화 했으면 다시 안하도록 한다.
-				//위에서 문제는 한번 초기화 한 경우 텀이 너무 길어진다는 문제가 있다. 앞에서부터의 15초 데이터만 저장하도록 한다.
-				//15초인 이유는 무호흡이 발생하는 데이터의 호흡시간이 15초 정도 발생하기 떄문이다.
-				//분석이 종료되는 시점은 앞에서 분석된 시간으로부터 1분이상 초과된 경우에 종료하고, 아닌 경우에는 현재 시간을 end.times에 추가한다.
-				//초기화를 한적이 있거나, 초기화하고 15초가 지났나?
-				
-				//무호흡 발생했나?
-				if(!isOSATermTimeOccur) {
-					isOSAAnsStart = true;
-					OSAcurTermTime = times;
-					System.out.println("기록vo생성");
-					EventFireGui.osaTermList.add(new StartEnd());
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=times;
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList = new ArrayList<AnalysisRawData>();
-					//EventFireGui.osaTermList.get(EventFireGui.osaTermList.size() - 1).AnalysisRawDataList.add(new AnalysisRawData(times, amplitude, EventFireGui.tmpMaxDb, frequency, sefrequency, 0));
-					isOSATermTimeOccur = true;
-				}
-				
-				isBreathTermCnt++;
-				isBreathTerm = true;
-			}
-			// 2-1-3. 숨쉬기 아님 카운트가 20을 넘으면(0.2초가 초과되면), 숨쉬는 구간 카운트가 70(0.7초) 미만일 시,
-			// 숨쉬는 구간 카운트, 숨쉬기 아님 카운트를 0으로 초기화 한다. 숨쉬기구간은 false가 된다.
-		} else {
-			// 3. 기준 데시벨보다 낮은 소리인 경우는 무호흡 중인지 체크한다.
-			// 3-1. 숨쉬기 구간이 false인 경우, 무호흡 구간 카운트를 증가하며, 무호흡 구간은 true가 된다.
-			if (isBreathTerm == false) {
-				isOSATermCnt++;
-				isOSATerm = true;
-			} else {
-				// 3-1-2. 숨쉬기 구간이 true인 경우에는 숨쉬기 아님 카운트를 증가시킨다.
-				isBreathTermCntOpp++;
-				isOSATermCntOpp++;
-			}
-		}
-
-		if (isBreathTermCntOpp > 20) {
-			if (isBreathTermCnt < 70) {
-				// 일정 데시벨 이상이고, 숨쉬기 카운트의 0.2초 오차가 발생한 데이터로 무시함.
-				// System.out.println("[ignore term, "+String.format("%.2f", curTermTime) +
-				// "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " +
-				// isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
-				// curTermTime = time;
-				isBreathTermCnt = 0;
-				isBreathTermCntOpp = 0;
-				isBreathTerm = false;
-				// beforeTermWord=BREATH;
-			} else {
-				// 2-1-3-1. 기준 정보의 기준 시간이 숨쉬기 시작시간, 현재 시간은 숨쉬기 종료 시간
-				// (이 시간은 한번 호흡이지 무호흡 사이의 구간을 의미하지는 않는다.)
-				/*
-				 * if(beforeTermWord.equals(BREATH)) {
-				 * System.out.println("["+String.format("%.2f", curTermTime) +
-				 * "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " +
-				 * isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]"); }else {
-				 * System.out.println("["+String.format("%.2f", curTermTime) +
-				 * "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " +
-				 * isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]"); curTermTime
-				 * = times; }
-				 */
-				// System.out.println("["+String.format("%.2f", curTermTime) +
-				// "~"+String.format("%.2f", times) + "s, isBreathTermCnt: " +
-				// isBreathTermCnt+", isBreathTermCntOpp: "+isBreathTermCntOpp+"]");
-				//System.out.println("!!");
-				/*
-				if(times-OSAcurTermTime >15) {
-					OSAcurTermTime = times;
-					System.out.println(OSAcurTermTime);
-					EventFireGui.osaTermList.add(new StartEnd());
-					EventFireGui.osaTermList.get(EventFireGui.osaTermList.size()-1).start=OSAcurTermTime;
-					isOSATermTimeOccur = true;
-				}
-				*/
-				isBreathTermCnt = 0;
-				isBreathTermCntOpp = 0;
-				isBreathTerm = false;
-				beforeTermWord = BREATH;
-			}
-		}
-		// 1. 연속된 소리가 되는 기준 정보를 초기화 한다.
-		// 1-1. 기준 정보의 기준 시간은 기준 시간이 0이거나, 숨쉬는 구간 카운트가 0이며, 숨쉬기 아님 카운트가 0일 경우 초기화 한다.
-		if (OSAcurTermTime == 0 || (isBreathTermCnt == 0 && isOSATermCnt == 0)) {
-			//System.out.println("@@");
-			//OSAcurTermTime = times;
-		}
-		return 0;
-	}
+        //무호흡 종료 후 5초 이내에 코골이가 발생하지 않으면 취소
+        //무호흡 종료 후 5초 동안 코골이 발생여부를 체크한다.
+        if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end!=0 && times - osaTermList.get(osaTermList.size()-1).end < 5) {
+            if(snoringTermList.size()>0 && snoringTermList.get(snoringTermList.size()-1).start - osaTermList.get(osaTermList.size()-1).end > 0 && snoringTermList.get(snoringTermList.size()-1).start - osaTermList.get(osaTermList.size()-1).end < 5){
+                //코골이가 녹음 중이게 되었을 때, 체크 플래그를 업데이트
+                if(snoringTermList.get(snoringTermList.size() - 1).end==0){
+                    osaTermList.get(osaTermList.size()-1).chk = 1;
+                }
+            }
+        }
+        //무호흡 종료 후 5초가 넘은 경우 플래그를 체크해서 코골이를 삭제한다.
+        if(osaTermList.size()>0 && osaTermList.get(osaTermList.size()-1).end!=0 && times - osaTermList.get(osaTermList.size()-1).end > 5) {
+            if(osaTermList.get(osaTermList.size()-1).chk==0) {
+                osaTermList.remove(osaTermList.size()-1);
+            }
+        }
+        CHECKED_STATUS = CHECKED_COMPLETE;
+        return CHECKED_COMPLETE;
+    }
+    
+    static boolean someNoiseStartInRecording = false;
+    static double someNoiseChkDBAgainInRecording = 0.0;
+    static int someNoiseStartCnt = 0;
+    static int someNoiseStartOppCnt = 0;
+    static int someNoiseDbChkCnt = 0;
+    
+    public static int someNoiseCheck(double decibel, double times, List<StartEnd> noiseTermListForOsaList){
+        //음파가 발생하는 구간,
+        //플래그로 음파가 발생하고 있는지를 관리한다.
+        //소리가 발생하고, 0.5초 간격으로 연속되고 있는지 체크한다.
+        //연속되지 않는 순간 음파가 끝난 것으로 간주한다.
+        double chkSnoringDb = getMinDB();
+        if(chkSnoringDb<=-30) {
+            chkSnoringDb = getMinDB()/2;
+        }else if(chkSnoringDb<=-20) {
+            chkSnoringDb = getMinDB()/1.75;
+        }else if(chkSnoringDb<=-10) {
+            chkSnoringDb = getMinDB()/1.5;
+        }
+        if(decibel > chkSnoringDb) {
+            //음파가 발생했음.
+            if(someNoiseStartInRecording==false) {
+                //TODO 음파 진행중일 떄의 평균 데시벨을 가지고, 음파로 인정할 소리를 한번더 구별 한다.
+                someNoiseChkDBAgainInRecording = decibel;
+                //녹음 중에 소리가 발생했고 음파 시작은 아닌 상태, 음파 시작 상태로 변환
+                someNoiseStartInRecording = true;
+                //코골이 카운트를 초기화(음파 진행 중에 카운트 증가)
+                someNoiseStartCnt = 0;
+                //낮은 주파수 평균이 데시벨의 절반보다 낮다면 코골이 카운트 증가
+                //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
+                someNoiseStartOppCnt = 0;
+                //음파시작시간을 보관하기 위해 기록vo를 생성
+                StartEnd st = new StartEnd();
+                st.start = times;
+                st.AnalysisRawDataList = new ArrayList<AnalysisRawData>();
+                //st.AnalysisRawDataList.add(maxARD);
+                noiseTermListForOsaList.add(st);
+                //음파가 진행되는 동안 최대 데시벨과 저주파수의 데시벨의 평균을 계산하기 위해 값을 초기화 한다.
+                //최대 데시벨 값과 저주파수 데시벨 값을 저장한다.(초기화)
+                someNoiseDbChkCnt = 0;
+            }else {
+            	someNoiseChkDBAgainInRecording = (someNoiseChkDBAgainInRecording + decibel) /2;
+                if(firstDecibelAvg == 0 || secondDecibelAvg == 0) {
+                	someNoiseDbChkCnt = 0;
+                }else {
+                    if(Math.floor(decibel) >= Math.floor(someNoiseChkDBAgainInRecording) ) {
+                    	someNoiseDbChkCnt++;
+                    }
+                }
+            }
+        }else {
+            //소리가 발생하지 않았으면, 현재 코골이 음파 발생중인지 체크 한다.
+            if(someNoiseStartInRecording==true) {
+                if(noiseTermListForOsaList == null || noiseTermListForOsaList.size()==0){
+                	someNoiseStartInRecording = false;
+                    CHECKED_STATUS = CHECKED_ERROR;
+                    return CHECKED_ERROR;
+                }
+            	someNoiseStartCnt++;
+                //음파 진행 중이라면, 지금 체크중인 체크 시작시간이 1초를 넘었는지 체크한다.
+                if(times-noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).start>0.16*7){
+                    //음파시작시간과는 1초가 벌어졌다면 , 분석을 중단하고, 이후 코골이 발생 카운트를 체크하여 기록한다.
+                	someNoiseStartInRecording = false;
+                    if(someNoiseDbChkCnt > 0 ) {
+                        //코골이 카운트가 증가했었고, 코골이 기록vo에 종료 시간을 기록
+                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).end = times;
+                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).chk = someNoiseDbChkCnt;
+                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).positiveCnt = someNoiseStartCnt;
+                    	noiseTermListForOsaList.get(noiseTermListForOsaList.size()-1).negitiveCnt = someNoiseStartOppCnt;
+                    }else {
+                    }
+                }else {
+                    //음파 진행 중이고, 소리가 발생하지 않았으나 아직 1초가 지나지 않았다.
+                    //진행 카운트 증가 안하고 통과
+                    //-> 진행된 카운트 대신 반대 카운트 증가
+                    //음파 진행 시간 동안 얼만큼 체크가 안되었는지 카운트를 해서 비교할 수 있다.
+                	someNoiseStartOppCnt++;
+                }
+            }
+            //소리가 발생하지 않았고, 음파가 진행 중인 상태가 아니다.
+        }
+        CHECKED_STATUS = CHECKED_COMPLETE;
+        return CHECKED_COMPLETE;
+    }
 }

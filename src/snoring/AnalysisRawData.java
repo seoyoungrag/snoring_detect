@@ -2,12 +2,12 @@ package snoring;
 
 public class AnalysisRawData {
 
-	int sefamplitude;
-	double times;
-	int amplitude;
-	double decibel;
-	double frequency;
-	double sefrequency;
+	public int sefamplitude;
+	public double times;
+	public int amplitude;
+	public double decibel;
+	public double frequency;
+	public double sefrequency;
 	
 	public AnalysisRawData() {
 		super();
@@ -21,7 +21,7 @@ public class AnalysisRawData {
 		this.frequency = frequency;
 	}
 	public AnalysisRawData(double times, int amplitude, double decibel, double frequency, double sefrequency,
-			int sefamplitude) {
+                           int sefamplitude) {
 		super();
 		this.times = times;
 		this.amplitude = amplitude;
